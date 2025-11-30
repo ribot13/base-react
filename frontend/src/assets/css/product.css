@@ -1,0 +1,74 @@
+/* ------------------------------------- */
+/* Styles Khusus Tampilan Baris Tabel Produk */
+/* ------------------------------------- */
+
+.product-cell {
+    display: flex;
+    align-items: flex-start;
+    gap: 15px;
+}
+.product-thumb-img {
+    width: 50px;
+    height: 50px;
+    object-fit: cover;
+    border-radius: 6px;
+    border: 1px solid #dee2e6;
+    background-color: #f8f9fa;
+    flex-shrink: 0;
+}
+.product-info {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 4px;
+}
+.product-name-text {
+    font-weight: 600;
+    color: #212529;
+    font-size: 0.95rem;
+    line-height: 1.2;
+    margin-top: -2px;
+}
+.category-pill {
+    display: inline-block;
+    background-color: #f1f3f5;
+    color: #6c757d;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    width: fit-content;
+    border: 1px solid #e9ecef;
+}
+/* Helper untuk merapikan tabel agar konten rata atas */
+.data-table td {
+    vertical-align: middle; /* Ganti dari 'top' ke 'middle' agar sejajar */
+    padding-top: 12px;
+    padding-bottom: 12px;
+}
+
+/* ------------------------------------- */
+/* Styles Khusus BADGE STATUS (BARU) */
+/* ------------------------------------- */
+.status-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    margin-right: 5px;
+    margin-bottom: 3px;
+    line-height: 1.5;
+    gap: 3px;
+    border: 1px solid transparent;
+    white-space: nowrap; /* Pastikan badge tidak terpotong */
+}
+
+/* Warna Badge */
+.status-info { background-color: #e0f7fa; color: #00796b; border-color: #b2ebf2; } /* Contoh: DP Wajib */
+.status-warning { background-color: #fff3e0; color: #ff9800; border-color: #ffcc80; } /* Contoh: Pre-Order */
+.status-danger { background-color: #ffebee; color: #d32f2f; border-color: #ef9a9a; } /* Contoh: Link Only */
+.status-secondary { background-color: #f1f3f5; color: #6c757d; border-color: #dee2e6; } /* Contoh: Nonaktif */
+.status-success { background-color: #e8f5e9; color: #388e3c; border-color: #a5d6a7; } /* Contoh: Ready Stock */
+.status-low-stock { background-color: #fff4d9; color: #ff8c00; border-color: #ffd699; } /* Contoh: Stok Rendah */

@@ -1,0 +1,97 @@
+/* src/styles/LoginPage.css */
+
+/* Kontainer Utama */
+.login-page-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    background-color: #f4f7f6; /* Warna latar belakang lembut */
+    font-family: 'Arial', sans-serif;
+}
+
+/* Kotak Formulir */
+.login-form-box {
+    background: #ffffff;
+    padding: 40px;
+    border-radius: 12px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    width: 100%;
+    max-width: 400px;
+    text-align: center;
+}
+
+/* Header */
+.login-form-box h2 {
+    color: #004d40; /* Hijau Koperasi */
+    margin-bottom: 5px;
+    font-size: 24px;
+    font-weight: 700;
+}
+
+.login-form-box p.subtitle {
+    color: #666;
+    margin-bottom: 30px;
+    font-size: 14px;
+}
+
+/* Group Input */
+.form-group {
+    margin-bottom: 20px;
+    text-align: left;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 600;
+    color: #333;
+}
+
+.form-group input {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    box-sizing: border-box;
+    transition: border-color 0.3s;
+}
+
+.form-group input:focus {
+    border-color: #004d40;
+    outline: none;
+}
+
+/* Tombol Login */
+.login-button {
+    width: 100%;
+    padding: 12px;
+    background-color: #004d40; /* Warna utama */
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-size: 16px;
+    cursor: pointer;
+    transition: background-color 0.3s, transform 0.1s;
+    margin-top: 10px;
+}
+
+.login-button:hover:not(:disabled) {
+    background-color: #003830;
+    transform: translateY(-1px);
+}
+
+.login-button:disabled {
+    background-color: #a3d7d0;
+    cursor: not-allowed;
+}
+
+/* Pesan Error */
+.error-message {
+    background-color: #ffebee;
+    color: #c62828;
+    padding: 10px;
+    border-radius: 6px;
+    margin-bottom: 20px;
+    font-size: 14px;
+}

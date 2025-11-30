@@ -1,0 +1,33 @@
+/* frontend/src/index.css - REVISI TOTAL */
+
+:root {
+  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+}
+
+/* Reset dasar agar nempel ke pinggir layar */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  min-height: 100vh;
+  background-color: #ffffff;
+  color: #213547;
+  /* PENTING: Pastikan display BLOCK, bukan FLEX */
+  display: block; 
+}
+
+/* Pastikan container Root React juga full width */
+#root {
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  display: block;
+}
