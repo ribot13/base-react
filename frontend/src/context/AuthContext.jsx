@@ -1,65 +1,110 @@
 /* eslint-disable react-refresh/only-export-components */
-import React, { createContext, useContext, useState } from 'react';
-import { toast } from 'react-toastify';
+/* eslint-disable no-unused-vars */
+import React, { createContext, useContext, useState, useEffect } from 'react';
+import { toast } from 'react-toastify'; 
 
 const AuthContext = createContext();
+const API_BASE_URL = 'http://localhost:5001/api'; // 🎯 PASTIKAN URL BACKEND ANDA BENAR
 
 export const AuthProvider = ({ children }) => {
-    // 1. Definisikan state awal dari localStorage
-    const [isLoggedIn, setIsLoggedIn] = useState(
-        !!localStorage.getItem('token') // Cek apakah token ada
-    );
-    const [token, setToken] = useState(
-        localStorage.getItem('token')
-    );
+    // State dasar (tidak berubah)
+    const [isLoggedIn, setIsLoggedIn] = useState(!!localStorage.getItem('token'));
+    const [token, setToken] = useState(localStorage.getItem('token'));
     const [permissions, setPermissions] = useState(
-        JSON.parse(localStorage.getItem('permissions')) || [] // Ambil atau default ke array kosong
+        JSON.parse(localStorage.getItem('permissions')) || []
     );
-    // Tambahkan state user data jika Anda menyimpannya juga
     const [user, setUser] = useState(
         JSON.parse(localStorage.getItem('user')) || null
     );
+    
+    // 🎯 STATE BARU UNTUK MENU CACHING
+    const [sidebarMenu, setSidebarMenu] = useState(
+        JSON.parse(localStorage.getItem('sidebarMenu')) || [] // Data menu hierarki
+    );
+    const [menuVersion, setMenuVersion] = useState(
+        localStorage.getItem('menuVersion') || null // Versi menu dari backend
+    );
 
-    // 2. Fungsi Login: Menyimpan data ke State DAN localStorage
-    const login = (userData, userPermissions, authToken) => {
+
+    // Fungsi baru untuk mengambil dan menyimpan menu dari backend
+    const fetchAndSetMenu = async (authToken, newMenuVersion) => {
+        try {
+            const response = await fetch(`${API_BASE_URL}/menu/sidebar`, {
+                headers: { 
+                    'Authorization': `Bearer ${authToken}`,
+                    'Content-Type': 'application/json',
+                }
+            });
+            
+            if (!response.ok) {
+                throw new Error("Gagal mengambil data menu.");
+            }
+            
+            const menuData = await response.json(); 
+
+            // Simpan menu baru
+            setSidebarMenu(menuData);
+            localStorage.setItem('sidebarMenu', JSON.stringify(menuData));
+            
+            // Perbarui versi
+            setMenuVersion(newMenuVersion);
+            localStorage.setItem('menuVersion', newMenuVersion);
+
+        } catch (error) {
+            console.error("Gagal mengambil data menu:", error);
+            toast.error("Gagal memuat menu: " + error.message);
+        }
+    };
+
+
+    // Fungsi Login yang dimodifikasi untuk Caching Logic
+    const login = (userData, userPermissions, authToken, newMenuVersion) => {
+        // Simpan data user dan token (Persistensi)
+        localStorage.setItem('token', authToken);
+        localStorage.setItem('permissions', JSON.stringify(userPermissions));
+        localStorage.setItem('user', JSON.stringify(userData));
+        localStorage.setItem('menuVersion', newMenuVersion); // Simpan versi baru
+
         // Simpan ke State
         setToken(authToken);
         setPermissions(userPermissions);
         setUser(userData);
+        setMenuVersion(newMenuVersion); // Update state versi menu
         setIsLoggedIn(true);
 
-        // Simpan ke LocalStorage (Persistensi)
-        localStorage.setItem('token', authToken);
-        localStorage.setItem('permissions', JSON.stringify(userPermissions));
-        localStorage.setItem('user', JSON.stringify(userData));
+        // 2. Cek Versi Menu (Caching Logic)
+        const localVersion = localStorage.getItem('menuVersion');
+        
+        // Jika versi lokal TIDAK ADA atau TIDAK SAMA dengan versi baru dari backend
+        if (localVersion !== newMenuVersion || !sidebarMenu.length) {
+            fetchAndSetMenu(authToken, newMenuVersion);
+        }
 
-        // 🎯 TOAST NOTIFIKASI LOGIN BERHASIL
+        // Toast notifikasi
         const name = userData?.full_name || "Pengguna";
-        toast.success(`Selamat datang, ${name}! Anda berhasil login.`, {
-            toastId: 'login-success' // Mencegah duplikasi toast
-        });
-
+        toast.success(`Selamat datang, ${name}!`); 
     };
 
-    // 3. Fungsi Logout: Menghapus data dari State DAN localStorage
+    // Fungsi Logout (tidak berubah)
     const logout = () => {
-        setToken(null);
-        setPermissions([]);
-        setUser(null);
-        setIsLoggedIn(false);
-
-        // Hapus dari LocalStorage
+        // ... (Logika penghapusan data dari State dan localStorage) ...
         localStorage.removeItem('token');
         localStorage.removeItem('permissions');
         localStorage.removeItem('user');
-        // 🎯 TOAST NOTIFIKASI LOGOUT
-        toast.info("Anda telah berhasil logout.", {
-            toastId: 'logout-success'
-        });
+        localStorage.removeItem('sidebarMenu'); // Hapus cache menu saat logout
+        localStorage.removeItem('menuVersion');
+        
+        setToken(null);
+        setPermissions([]);
+        setUser(null);
+        setSidebarMenu([]);
+        setMenuVersion(null);
+        setIsLoggedIn(false);
+        
+        toast.info("Anda telah berhasil logout.");
     };
 
-    // 4. (Opsional) Efek untuk memuat ulang data saat window diinisialisasi
-    // Tidak perlu useEffect di sini karena state sudah diinisialisasi dari localStorage di awal.
+    // ... (useEffect untuk memuat ulang data saat mounting, opsional) ...
 
     return (
         <AuthContext.Provider value={{ 
@@ -67,6 +112,7 @@ export const AuthProvider = ({ children }) => {
             token, 
             permissions, 
             user, 
+            sidebarMenu, // 👈 TAMBAHKAN INI
             login, 
             logout 
         }}>

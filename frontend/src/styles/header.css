@@ -1,4 +1,6 @@
-/* --- Styling untuk Header.jsx (Hover Dropdown) --- */
+/* ====================================================== */
+/* --- Styling untuk Header.jsx (Dropdown Profil) --- */
+/* ====================================================== */
 
 /* Container: Tetap harus relative */
 .user-profile-dropdown-container {
@@ -11,12 +13,12 @@
 /* Tombol Toggle */
 .user-profile-toggle {
     background: none;
-    border: 1px solid transparent; /* Tambahkan border transparan untuk konsistensi */
+    border: 1px solid transparent;
     cursor: pointer;
     display: flex;
     align-items: center;
     padding: 8px 12px;
-    border-radius: 6px; /* Lebih halus */
+    border-radius: 6px;
     font-size: 14px;
     font-weight: 500;
     color: #444; 
@@ -37,11 +39,10 @@
     right: 0;
     z-index: 1000;
     background-color: white;
-    /* Box shadow yang lebih menonjol */
     box-shadow: 0 6px 15px rgba(0, 0, 0, 0.15); 
     border-radius: 6px; 
-    min-width: 180px; /* Ukuran lebih lebar */
-    margin-top: -5px; /* Jarak dari tombol */
+    min-width: 180px; 
+    margin-top: -5px; 
     border: 1px solid #eee;
     padding: 5px 0;
 }
@@ -67,13 +68,13 @@
 .dropdown-item.logout {
     color: #e74c3c; 
     font-weight: 500;
-    border-top: 1px solid #eee; /* Garis pemisah */
+    border-top: 1px solid #eee; 
     margin-top: 5px;
     padding-top: 10px;
 }
 
 .dropdown-item.logout:hover {
-    background-color: #ffe8e8; /* Background merah muda saat hover logout */
+    background-color: #ffe8e8; 
 }
 
 /* Ikon Chevron Rotasi */

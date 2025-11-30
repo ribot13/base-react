@@ -32,6 +32,7 @@ db.User = require('./user')(sequelize, DataTypes);
 db.Role = require('./role')(sequelize, DataTypes);
 db.Permission = require('./permission')(sequelize, DataTypes);
 db.UserPermission = require('./userPermission')(sequelize, DataTypes); 
+db.MenuItem=require('./MenuItem')(sequelize,DataTypes);
 // Anda mungkin juga perlu membuat model untuk tabel pivot user_roles dan role_permissions
 // Jika Anda tidak menggunakan file model terpisah, Sequelize akan membuatnya secara implisit.
 

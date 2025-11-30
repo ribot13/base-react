@@ -28,9 +28,10 @@ app.use(bodyParser.urlencoded({ extended: true }));
 // --- 3. Pemuatan Routes ---
 // Import routes auth Anda
 const authRoutes = require('./routes/auth.routes'); 
-
-// Terapkan routes Anda dengan prefix API
 app.use('/api/auth', authRoutes);
+
+const menuRoutes = require('./routes/menu.routes'); 
+app.use('/api/menu', menuRoutes);
 
 // Contoh Route Lain:
 // const pinjamanRoutes = require('./routes/pinjaman.routes');

@@ -1,0 +1,101 @@
+/* ====================================================== */
+/* --- Styling untuk Sidebar.jsx (Menu Hierarki) --- */
+/* ====================================================== */
+
+.sidebar {
+    width: 250px;
+    background-color: #1e3c39; /* Sidebar Utama */
+    color: #ecf0f1; 
+    padding: 0; 
+    height: 100vh; 
+    position: fixed; 
+    top: 0;
+    left: 0;
+    z-index: 999; 
+}
+
+.main-menu {
+    list-style: none;
+    padding: 20px 0; 
+    margin: 0;
+}
+
+/* Item Menu Level 1 (Parent atau Link Level 1) */
+.main-menu > li {
+    position: relative;
+    list-style: none;
+}
+
+/* Styling Link (Level Apapun) dan Parent Toggle */
+.main-menu li > a, .menu-parent-toggle {
+    display: flex;
+    align-items: center;
+    padding: 12px 20px;
+    color: #ecf0f1;
+    text-decoration: none;
+    transition: background-color 0.2s, border-left 0.2s;
+    cursor: pointer;
+    font-size: 1.0em; /* Font Level 1 */
+}
+
+.menu-icon {
+    margin-right: 10px;
+    display: flex;
+}
+
+/* Styling untuk Parent (Folder) Menu */
+.menu-parent-toggle {
+    font-weight: 500;
+    color: #c0c0c0;
+    justify-content: space-between; 
+}
+
+/* 🎯 Warna Background Parent Saat Terbuka */
+.menu-parent-item.open > .menu-parent-toggle {
+    background-color: #1a4d46; /* Background sedikit lebih cerah dari sidebar utama */
+    color: white;
+}
+
+/* Warna & Garis Aktif (Link Level 1) */
+.main-menu > li.active > a, 
+.main-menu > li > a:hover {
+    background-color: #1a4d46; 
+    border-left: 3px solid #66bb6a; 
+    padding-left: 17px; 
+}
+
+/* ======================================= */
+/* Submenu UL dan Item */
+/* ======================================= */
+
+/* 🎯 FIX 2: Warna Background Submenu UL (Harus Beda) */
+.submenu-list {
+    list-style: none;
+    padding-left: 0; 
+    margin: 0;
+    background-color: #16302e; /* Hijau paling gelap untuk kontainer UL submenu */
+}
+
+/* Styling Item Submenu (Link Level 2) */
+.submenu-list li > a {
+    /* 🎯 FIX 1A: INDENTASI - Geser menjorok ke dalam */
+    padding: 10px 20px 10px 45px; /* Indentasi yang signifikan */
+    
+    /* 🎯 FIX 1B: UKURAN FONT - Submenu lebih kecil */
+    font-size: 0.9em; 
+    color: #d1d9dd;
+}
+
+/* 🎯 FIX 3: Warna Background Submenu Aktif/Hover (Mencolok) */
+.submenu-list li > a:hover {
+    background-color: #27524e; /* Warna hover/aktif yang berbeda dari UL dan Parent */
+    border-left: 3px solid #66bb6a; 
+    padding-left: 42px; /* Sesuaikan padding kiri saat border muncul */
+}
+
+.submenu-list li.active > a {
+    background-color: #27524e; /* Warna aktif saat diklik */
+    border-left: 3px solid #66bb6a; 
+    padding-left: 42px; 
+    color: white;
+}
