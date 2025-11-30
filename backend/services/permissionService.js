@@ -8,12 +8,6 @@ const { User, Role, Permission, UserPermission } = require("../models");
  */
 async function getEffectivePermissionsFromDB(userId) {
   
-    // -------------------------------------------------------------
-    // 🎯 HAPUS LOGIC findByPk(attributes: ['role'])
-    // Karena kolom 'role' di tabel users sudah dihapus.
-    // Kita akan langsung melakukan query RBA penuh di langkah 1.
-    // -------------------------------------------------------------
-  
     let permissionsSet = new Set();
     const deniedPermissions = [];
 
@@ -34,7 +28,7 @@ async function getEffectivePermissionsFromDB(userId) {
         ],
     });
 
-    console.log("LOG [RBA Debug]: Data User Ditemukan:", JSON.stringify(userWithRoles, null, 2));
+    //console.log("LOG [RBA Debug]: Data User Ditemukan:", JSON.stringify(userWithRoles, null, 2));
 
     if (!userWithRoles) {
         return [];
@@ -44,18 +38,18 @@ async function getEffectivePermissionsFromDB(userId) {
     const isSuperAdmin = userWithRoles.Roles.some(role => role.name.toLowerCase() === 'superadmin');
 
     if (isSuperAdmin) {
-        console.log(`LOG [RBA]: User adalah Superadmin ID: ${userId}. Memberikan akses penuh.`);
-        // Hardcode SEMUA izin jika user adalah Superadmin
-        return [
-            // Izin untuk Sidebar (read-view)
-            'read-member', 'read-simpanan', 'read-pinjaman', 'read-penjualan', 'manage-roles', 'manage-users',
-            
-            // Izin Operasional (CRUD)
-            'create-member', 'update-member', 'delete-member',
-            'create-simpanan', 'update-simpanan', 'delete-simpanan',
-            'create-pinjaman', 'update-pinjaman', 'delete-pinjaman',
-            'create-penjualan', 'update-penjualan', 'delete-penjualan'
-        ];
+        // console.log(`LOG [RBA]: User adalah Superadmin ID: ${userId}. Memberikan akses penuh.`);
+        
+        // 🎯 PERBAIKAN: Mengambil semua kolom 'name' dari tabel Permissions
+        const allPermissions = await Permission.findAll({
+            attributes: ['name']
+        });
+
+        // Mapping hasil query menjadi array of string
+        const superAdminPermissions = allPermissions.map(perm => perm.name);
+        
+        return superAdminPermissions;
+        // --------------------------------------------------------------------
     }
 
     // 3. Kumpulkan Izin dari Roles (Hanya jika BUKAN Superadmin)
