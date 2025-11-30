@@ -1,0 +1,87 @@
+/* --- Styling untuk Header.jsx (Hover Dropdown) --- */
+
+/* Container: Tetap harus relative */
+.user-profile-dropdown-container {
+    position: relative;
+    display: flex; 
+    padding-top: 5px; 
+    padding-bottom: 5px;
+}
+
+/* Tombol Toggle */
+.user-profile-toggle {
+    background: none;
+    border: 1px solid transparent; /* Tambahkan border transparan untuk konsistensi */
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    padding: 8px 12px;
+    border-radius: 6px; /* Lebih halus */
+    font-size: 14px;
+    font-weight: 500;
+    color: #444; 
+    transition: background-color 0.2s, border-color 0.2s;
+    margin-top: -5px; 
+    margin-bottom: -5px;
+}
+
+.user-profile-toggle:hover {
+    background-color: #f5f5f5;
+    border-color: #ddd;
+}
+
+/* Dropdown Menu */
+.dropdown-menu {
+    position: absolute;
+    top: 100%; 
+    right: 0;
+    z-index: 1000;
+    background-color: white;
+    /* Box shadow yang lebih menonjol */
+    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.15); 
+    border-radius: 6px; 
+    min-width: 180px; /* Ukuran lebih lebar */
+    margin-top: -5px; /* Jarak dari tombol */
+    border: 1px solid #eee;
+    padding: 5px 0;
+}
+
+/* Item di dalam dropdown */
+.dropdown-item {
+    width: 100%;
+    padding: 10px 15px;
+    text-align: left;
+    border: none;
+    background: none;
+    cursor: pointer;
+    font-size: 14px;
+    color: #333;
+    transition: background-color 0.15s;
+}
+
+.dropdown-item:hover {
+    background-color: #f0f0f0;
+}
+
+/* Styling Khusus untuk Logout */
+.dropdown-item.logout {
+    color: #e74c3c; 
+    font-weight: 500;
+    border-top: 1px solid #eee; /* Garis pemisah */
+    margin-top: 5px;
+    padding-top: 10px;
+}
+
+.dropdown-item.logout:hover {
+    background-color: #ffe8e8; /* Background merah muda saat hover logout */
+}
+
+/* Ikon Chevron Rotasi */
+.dropdown-icon {
+    margin-left: 8px;
+    transition: transform 0.2s;
+}
+
+.dropdown-icon.rotated {
+    transform: rotate(180deg);
+}

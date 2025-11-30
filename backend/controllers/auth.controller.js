@@ -32,9 +32,9 @@ exports.login = async (req, res) => {
         const token = jwt.sign(tokenPayload, process.env.JWT_SECRET, { expiresIn: '1d' });
 
         // 4. Ambil Izin Efektif (Kunci RBA)
-        console.log("LOG: Mulai mengambil izin efektif untuk user ID:", user.id);
+        //console.log("LOG: Mulai mengambil izin efektif untuk user ID:", user.id);
         const effectivePermissions = await getEffectivePermissionsFromDB(user.id);
-        console.log("LOG: Izin efektif berhasil diambil:", effectivePermissions);
+        //console.log("LOG: Izin efektif berhasil diambil:", effectivePermissions);
 
         // 5. Kirim Respons Berhasil
         res.status(200).json({

@@ -1,5 +1,6 @@
 /* eslint-disable react-refresh/only-export-components */
 import React, { createContext, useContext, useState } from 'react';
+import { toast } from 'react-toastify';
 
 const AuthContext = createContext();
 
@@ -31,6 +32,13 @@ export const AuthProvider = ({ children }) => {
         localStorage.setItem('token', authToken);
         localStorage.setItem('permissions', JSON.stringify(userPermissions));
         localStorage.setItem('user', JSON.stringify(userData));
+
+        // 🎯 TOAST NOTIFIKASI LOGIN BERHASIL
+        const name = userData?.full_name || "Pengguna";
+        toast.success(`Selamat datang, ${name}! Anda berhasil login.`, {
+            toastId: 'login-success' // Mencegah duplikasi toast
+        });
+
     };
 
     // 3. Fungsi Logout: Menghapus data dari State DAN localStorage
@@ -44,6 +52,10 @@ export const AuthProvider = ({ children }) => {
         localStorage.removeItem('token');
         localStorage.removeItem('permissions');
         localStorage.removeItem('user');
+        // 🎯 TOAST NOTIFIKASI LOGOUT
+        toast.info("Anda telah berhasil logout.", {
+            toastId: 'logout-success'
+        });
     };
 
     // 4. (Opsional) Efek untuk memuat ulang data saat window diinisialisasi
