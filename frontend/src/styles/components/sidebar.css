@@ -46,6 +46,20 @@
     margin: 0;
 }
 
+.main-menu a, .submenu a {
+    display: flex;
+    align-items: center;
+    padding: 10px 20px;
+    color: var(--text-dark);
+    font-size: 14px;
+    font-weight: 500;
+    
+    /* 🎯 KRITIS: HILANGKAN UNDERLINE DI SINI */
+    text-decoration: none; 
+    
+    transition: all var(--transition-speed);
+}
+
 /* 4. STYLING ITEM MENU (li dan a/Link) */
 .menu-item-wrapper {
     margin-bottom: 2px;
