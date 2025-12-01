@@ -1,0 +1,190 @@
+/*
+ * -- src/styles/components/header.css --
+ * Styling untuk Header.jsx
+ */
+
+/* 1. HEADER UTAMA */
+.main-header {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    /* Diambil dari theme.css */
+    height: var(--header-height); 
+    background-color: var(--bg-card);
+    box-shadow: var(--shadow-soft);
+    z-index: 1000;
+    
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 20px;
+}
+
+
+/* 2. LOGO & JUDUL APLIKASI */
+.header-left-area {
+    display: flex;
+    align-items: center;
+}
+
+.app-title-display {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.app-logo {
+    height: 30px; /* Ukuran logo */
+    width: auto;
+}
+
+.app-name {
+    /* 🎯 Judul agak besar, tapi tidak terlalu besar. */
+    font-size: 18px; 
+    font-weight: 600;
+    color: var(--text-dark);
+}
+
+
+/* 3. TOMBOL TOGGLE SIDEBAR (MASALAH #3 FIXED) */
+.sidebar-toggle-button {
+    /* 🎯 Default HILANG di PC */
+    display: none; 
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 5px;
+    color: var(--text-dark);
+    margin-right: 15px; /* Jarak antara tombol dan logo */
+}
+
+/* TAMPILKAN hanya di Mobile/Tablet */
+@media (max-width: 992px) { 
+    .sidebar-toggle-button {
+        display: block; 
+    }
+}
+
+
+/* 4. AREA DROPDOWN PROFIL */
+.user-profile-dropdown-container {
+    position: relative;
+    display: flex; 
+    /* Gunakan z-index tinggi agar dropdown muncul di atas semua */
+    z-index: 1001; 
+}
+
+.user-profile-toggle {
+    background: none;
+    border: 1px solid var(--border-color);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    padding: 6px 10px;
+    border-radius: 20px; /* Bentuk kapsul */
+    font-size: var(--font-size-sm);
+    color: var(--text-dark); 
+    transition: background-color var(--transition-speed), border-color var(--transition-speed);
+}
+
+.user-profile-toggle:hover {
+    background-color: var(--bg-page);
+    border-color: var(--primary-color);
+}
+
+/* Avatar Initial */
+.user-avatar {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background-color: var(--primary-color);
+    color: var(--text-on-primary);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 14px;
+    font-weight: 600;
+    margin-right: 8px;
+}
+
+.user-display-name {
+    margin-right: 5px;
+    font-weight: 500;
+}
+
+.dropdown-icon {
+    transition: transform var(--transition-speed);
+    margin-left: 5px;
+}
+.dropdown-icon.rotated {
+    transform: rotate(180deg);
+}
+
+
+/* 5. MENU DROPDOWN */
+.dropdown-menu {
+    position: absolute;
+    top: calc(100% + 5px); /* Jarak dari tombol */
+    right: 0;
+    background-color: var(--bg-card);
+    /* Menggunakan variabel shadow soft */
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1); 
+    border-radius: 8px; 
+    min-width: 200px;
+    border: 1px solid var(--border-color);
+    padding: 10px 0;
+    animation: fadeIn 0.15s ease-out; /* Tambahkan sedikit animasi */
+}
+
+.dropdown-user-info {
+    padding: 0 15px 10px;
+}
+.user-info-name {
+    font-weight: 600;
+    margin-bottom: 2px;
+}
+.user-info-email {
+    font-size: 12px;
+    color: var(--text-muted);
+}
+.dropdown-divider {
+    height: 1px;
+    background-color: var(--border-color);
+    margin: 5px 0;
+}
+
+
+/* Item di dalam dropdown */
+.dropdown-item {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    padding: 10px 15px;
+    text-align: left;
+    border: none;
+    background: none;
+    cursor: pointer;
+    color: var(--text-dark);
+    font-size: var(--font-size-sm);
+    transition: background-color 0.2s, color 0.2s;
+}
+
+.dropdown-item:hover {
+    background-color: var(--bg-page);
+}
+
+.dropdown-item.logout {
+    color: var(--error-color); /* Warna merah untuk logout */
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}

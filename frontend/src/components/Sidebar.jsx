@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext.jsx'; 
-// Asumsi Anda sudah membuat dan mengimpor hook ini
+// Pastikan Anda sudah membuat dan mengimpor hook ini
 import { useAccessControl } from '../hooks/useAccessControl.js'; 
 import * as FeatherIcons from 'react-icons/fi';
 // Import styling sidebar
-import '../styles/sidebar.css'; 
+import '../styles/components/sidebar.css'; 
 
 
 // ----------------------------------------------------
@@ -15,6 +15,11 @@ const MenuItemRender = ({ item, openItemId, setOpenItemId }) => {
     const { canAccess } = useAccessControl();
     const location = useLocation();
     
+    // Cek Izin: Jika izin dibutuhkan dan user tidak memiliki, jangan render
+    if (item.required_permission && !canAccess(item.required_permission)) {
+        return null;
+    }
+
     const hasChildren = item.Children && item.Children.length > 0;
     
     // Tentukan apakah salah satu anak aktif (agar menu terbuka saat navigasi)
@@ -25,93 +30,101 @@ const MenuItemRender = ({ item, openItemId, setOpenItemId }) => {
     // State Buka/Tutup ditentukan oleh state terpusat di Parent
     const isOpen = openItemId === item.id || isParentActive; 
     
-    // Cek Izin: (Logic filtering yang sudah Anda perbaiki)
-    if (item.required_permission && !canAccess(item.required_permission)) {
-        return null;
-    }
-
-    // Ambil Ikon
-    const IconComponent = FeatherIcons[item.icon_name] || FeatherIcons.FiCircle;
-    
     // Tentukan apakah item saat ini yang aktif
     const isCurrentPath = item.path && location.pathname.startsWith(item.path);
 
-    // Handler untuk toggle
-    const handleToggle = (e) => {
-        e.preventDefault();
-        // Jika sedang terbuka, tutup (set null). Jika tertutup, buka (set item.id).
-        setOpenItemId(isOpen ? null : item.id);
+    // Ambil Ikon (default ke FiCircle jika icon_name tidak valid/tidak ada)
+    const IconComponent = FeatherIcons[item.icon_name] || FeatherIcons.FiCircle;
+
+    // Handler untuk toggle submenu
+    const handleToggle = () => {
+        // Jika menu sedang terbuka ATAU sudah aktif (sebagai parent), tutup (null). Jika tidak, buka (item.id).
+        setOpenItemId(isOpen && !isParentActive ? null : item.id);
     };
 
-    // KASUS 1: ITEM ADALAH PARENT/FOLDER
-    if (hasChildren && !item.path) {
-        
+    // Tentukan class untuk wrapper (li)
+    const wrapperClass = `menu-item-wrapper ${isCurrentPath ? 'active' : ''}`;
+    
+    // Tentukan ikon toggler (FiChevronDown/FiChevronRight)
+    const TogglerIcon = isOpen ? FeatherIcons.FiChevronDown : FeatherIcons.FiChevronRight;
+
+
+    // 1. Item yang memiliki Children (Parent Menu)
+    if (hasChildren) {
         return (
-            <li className={`menu-parent-item ${isOpen ? 'open' : ''} ${isParentActive ? 'active' : ''}`}>
-                
-                {/* Gunakan tag 'a' dengan onClick untuk toggle */}
-                <a onClick={handleToggle} className="menu-parent-toggle" href="#">
+            <li className={wrapperClass}> 
+                {/* Menggunakan tombol karena ini adalah aksi toggle, bukan navigasi */}
+                <button 
+                    onClick={handleToggle} 
+                    className="menu-item-link"
+                >
                     <span className="menu-icon"><IconComponent size={20} /></span>
                     <span className="menu-title">{item.title}</span>
-                    <FeatherIcons.FiChevronDown 
-                        className={`submenu-toggle-icon ${isOpen ? 'rotated' : ''}`}
-                    />
-                </a>
+                    {/* Toggler hanya muncul jika ada children */}
+                    <span className={`menu-toggler ${isOpen ? 'rotated' : ''}`}>
+                        <TogglerIcon size={16} />
+                    </span>
+                </button>
                 
-                {/* Submenu UL */}
-                {isOpen && (
-                    <ul className="submenu-list">
-                        {item.Children.map((child) => (
-                            // Rekursi untuk anak, meneruskan state dan handler
-                            <MenuItemRender 
-                                key={child.id} 
-                                item={child} 
-                                openItemId={openItemId} 
-                                setOpenItemId={setOpenItemId} 
-                            />
-                        ))}
-                    </ul>
-                )}
+                {/* Submenu List */}
+                <ul className="submenu" style={{ 
+                    maxHeight: isOpen ? '500px' : '0' 
+                }}>
+                    {item.Children.map((child) => (
+                        // REKURSIF: Render children
+                        <MenuItemRender 
+                            key={child.id} 
+                            item={child} 
+                            openItemId={openItemId} 
+                            setOpenItemId={setOpenItemId} 
+                        />
+                    ))}
+                </ul>
             </li>
         );
     }
     
-    // KASUS 2: ITEM ADALAH LINK
-    if (item.path) {
-        return (
-            <li className={isCurrentPath ? 'active' : ''}>
-                <Link to={item.path}>
-                    <span className="menu-icon"><IconComponent size={20} /></span> 
-                    <span className="menu-title">{item.title}</span>
-                </Link>
-            </li>
-        );
-    }
-    
-    return null;
+    // 2. Item Tunggal (Leaf Node)
+    return (
+        <li className={wrapperClass}>
+            <Link 
+                to={item.path} 
+                className="menu-item-link" // Gunakan class yang sama agar style konsisten
+                onClick={() => setOpenItemId(null)}
+            >
+                <span className="menu-icon"><IconComponent size={20} /></span> 
+                <span className="menu-title">{item.title}</span>
+            </Link>
+        </li>
+    );
 };
 
 
 // ----------------------------------------------------
 // KOMPONEN UTAMA SIDEBAR
 // ----------------------------------------------------
-const Sidebar = () => {
+// 🎯 KRITIS: SIDEBAR HARUS MENERIMA PROP 'isOpen'
+const Sidebar = ({ isOpen }) => { 
     const { sidebarMenu } = useAuth();
     const location = useLocation();
 
-    // 🎯 State terpusat untuk mengontrol submenu yang terbuka
+    // State terpusat untuk mengontrol submenu yang terbuka
     const [openItemId, setOpenItemId] = useState(null); 
 
     const isDashboardActive = location.pathname === '/dashboard';
 
     return (
-        <aside className="sidebar">
+        <aside className={`sidebar ${isOpen ? 'is-open' : ''}`}>
             <nav>
                 <ul className="main-menu">
                     
-                    {/* ITEM DASHBOARD */}
-                    <li className={isDashboardActive ? 'active' : ''}>
-                        <Link to="/dashboard" onClick={() => setOpenItemId(null)}>
+                    {/* ITEM DASHBOARD (HARDCODED) */}
+                    <li className={isDashboardActive ? 'menu-item-wrapper active' : 'menu-item-wrapper'}>
+                        <Link 
+                            to="/dashboard" 
+                            className="menu-item-link"
+                            onClick={() => setOpenItemId(null)}
+                        >
                             <span className="menu-icon"><FeatherIcons.FiHome size={20} /></span> 
                             <span className="menu-title">Dashboard</span>
                         </Link>
@@ -119,6 +132,7 @@ const Sidebar = () => {
                     
                     {/* RENDER SISA MENU DINAMIS */}
                     {sidebarMenu.map((item) => (
+                        // Panggil komponen rekursif untuk menu level 1
                         <MenuItemRender 
                             key={item.id} 
                             item={item} 

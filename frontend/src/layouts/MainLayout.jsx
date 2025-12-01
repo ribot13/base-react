@@ -1,23 +1,41 @@
 // src/layouts/MainLayout.jsx
-import React from 'react';
-import Sidebar from '../components/Sidebar.jsx'; 
+import React, { useState } from 'react';
 import Header from '../components/Header.jsx';
-import '../styles/main.css';
+import Sidebar from '../components/Sidebar.jsx';
+// Pastikan semua impor CSS ada dan PATH sudah BENAR
+import '../styles/global.css'; 
+import '../styles/theme.css'; 
+import '../styles/layout.css'; 
 
 const MainLayout = ({ children }) => {
-    return (
-        <div className="app-wrapper">
-            {/* Sidebar selalu tampil */}
-            <Sidebar /> 
+    // State untuk mengontrol sidebar di mobile/tablet
+    const [isSidebarOpen, setIsSidebarOpen] = useState(false); 
+    const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
 
-            <div className="main-content-area">
-                {/* Header selalu tampil */}
-                <Header /> 
+    return (
+        <div className="main-layout-container">
+            {/* 1. HEADER (Fixed di atas) */}
+            {/* Header menerima toggle function untuk tombol menu mobile */}
+            <Header onSidebarToggle={toggleSidebar} />
+            
+            <div className="content-area-wrapper">
+                {/* 2. SIDEBAR (Fixed di kiri, di bawah header) */}
+                {/* Sidebar menerima state open untuk responsive CSS */}
+                <Sidebar isOpen={isSidebarOpen} /> 
                 
-                {/* Konten spesifik halaman (Dashboard, Member, Pinjaman) */}
-                <main className="content-wrapper">
+                {/* 3. MAIN CONTENT (Harus punya margin kiri di desktop) */}
+                <main className="main-content">
                     {children}
                 </main>
+                
+                {/* 4. OVERLAY (Hanya aktif di mobile saat sidebar terbuka) */}
+                {/* Overlay harus berada di bawah sidebar (z-index 998) */}
+                {isSidebarOpen && (
+                    <div 
+                        className="mobile-overlay" 
+                        onClick={toggleSidebar} 
+                    />
+                )}
             </div>
         </div>
     );

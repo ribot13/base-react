@@ -1,0 +1,51 @@
+/*
+ * -- theme.css (VERSI LENGKAP) --
+ * Berisi CSS Variables untuk Palet Warna Soft & Dimensi Layout
+ */
+
+:root {
+    /* ------------------------------------ */
+    /* 1. PALET WARNA SOFT */
+    /* ------------------------------------ */
+    --primary-color: #5D9CEC;       /* Biru lembut */
+    --secondary-color: #48CFAD;     /* Hijau Mint lembut */
+    
+    /* Warna Background & Permukaan */
+    --bg-page: #F8F9FA;             /* Latar belakang halaman */
+    --bg-card: #FFFFFF;             /* Latar belakang komponen/kartu */
+    
+    /* Warna Teks */
+    --text-dark: #434A54;           
+    --text-muted: #AAB8C2;          
+    --text-on-primary: #FFFFFF;     
+    
+    /* Warna Status */
+    --success-color: #8CC152;       
+    --warning-color: #F6BB42;       
+    --error-color: #E9573F;         
+    
+    /* Garis & Bayangan */
+    --border-color: #E6E9ED;        
+    --shadow-soft: 0 4px 10px rgba(0, 0, 0, 0.05); 
+
+
+    /* ------------------------------------ */
+    /* 🎯 2. DIMENSI LAYOUT (KRITIS!) */
+    /* ------------------------------------ */
+    --header-height: 55px;          /* Tinggi Header (HARUS SAMA dengan padding-top di layout.css) */
+    --sidebar-width-desktop: 250px; /* Lebar Sidebar di Desktop (HARUS SAMA dengan margin-left di layout.css) */
+    
+    /* Kecepatan Transisi */
+    --transition-speed: 0.3s;
+    
+    /* Font Size */
+    --font-size-sm: 14px;
+}
+
+/* Terapkan background page ke body */
+body {
+    background-color: var(--bg-page);
+    color: var(--text-dark);
+}
+
+/* ... (Style lainnya jika ada) ... */

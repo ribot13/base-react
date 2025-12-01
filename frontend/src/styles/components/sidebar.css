@@ -1,0 +1,127 @@
+/*
+ * -- src/styles/sidebar.css --
+ * Styling untuk Sidebar.jsx dan menu item di dalamnya.
+ */
+
+/* 1. CONTAINER SIDEBAR UTAMA */
+.sidebar {
+    /* 🎯 Posisi & Ukuran (Diambil dari theme.css) */
+    position: fixed;
+    top: var(--header-height); /* Mulai di bawah header */
+    left: 0;
+    height: calc(100vh - var(--header-height));
+    width: var(--sidebar-width-desktop); /* 250px di Desktop */
+    
+    /* Tampilan Soft */
+    background-color: var(--bg-card); /* Putih bersih */
+    box-shadow: var(--shadow-soft); /* Bayangan lembut */
+    z-index: 999;
+    
+    /* Animasi dan Scroll */
+    transition: transform var(--transition-speed), width var(--transition-speed);
+    overflow-y: auto; /* Memungkinkan scroll vertikal */
+    padding: 10px 0; /* Padding vertikal untuk menu */
+}
+
+/* 2. RESPONSIVE (Mobile/Tablet) */
+@media (max-width: 992px) { 
+    .sidebar {
+        width: 280px; 
+        transform: translateX(-100%); /* 👈 Sembunyikan secara default */
+        /* Tambahkan bayangan yang lebih terlihat saat sidebar muncul */
+        box-shadow: 6px 0 15px rgba(0, 0, 0, 0.15); 
+    }
+    
+    /* 🎯 Class yang di-toggle oleh React state: Sidebar Terbuka */
+    .sidebar.is-open {
+        transform: translateX(0); 
+    }
+}
+
+
+/* 3. STYLING MENU UTAMA (ul) */
+.main-menu {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+/* 4. STYLING ITEM MENU (li dan a/Link) */
+.menu-item-wrapper {
+    margin-bottom: 2px;
+}
+
+.menu-item-wrapper > a, .menu-item-wrapper button {
+    display: flex;
+    align-items: center;
+    padding: 10px 15px;
+    width: 100%;
+    text-align: left;
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: var(--font-size-sm);
+    color: var(--text-dark); /* Warna teks default */
+    transition: background-color var(--transition-speed), color var(--transition-speed);
+}
+
+.menu-item-wrapper > a:hover, .menu-item-wrapper button:hover {
+    background-color: color-mix(in srgb, var(--primary-color) 10%, transparent); /* Background hover yang sangat soft */
+    color: var(--primary-color);
+}
+
+/* 5. ACTIVE STATE */
+.menu-item-wrapper.active > a {
+    /* Background dan warna untuk item yang sedang aktif */
+    background-color: var(--primary-color);
+    color: var(--text-on-primary); /* Putih */
+    border-radius: 0 50px 50px 0; /* Border radius hanya di sisi kanan */
+}
+
+/* 6. IKON DAN TITLE */
+.menu-icon {
+    margin-right: 12px;
+    min-width: 20px; /* Jaga agar ikon tidak bergeser */
+}
+
+.menu-title {
+    flex-grow: 1;
+}
+
+/* 7. SUBMENU TOGGLER (untuk ikon panah) */
+.menu-toggler {
+    transition: transform var(--transition-speed);
+}
+.menu-toggler.rotated {
+    transform: rotate(90deg);
+}
+
+/* 8. SUBMENU (ul di dalam li) */
+.submenu {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    padding-left: 20px; /* Indentasi untuk submenu */
+    overflow: hidden; /* Penting untuk animasi buka/tutup */
+    transition: max-height var(--transition-speed) ease-in-out;
+}
+
+.submenu-item {
+    margin-bottom: 2px;
+}
+
+.submenu-item a {
+    padding: 8px 15px 8px 30px; /* Lebih dalam */
+    font-size: 13px;
+    color: var(--text-muted);
+}
+.submenu-item a:hover {
+    color: var(--primary-color);
+}
+
+/* Active State untuk Submenu Item */
+.submenu-item.active a {
+    font-weight: 600;
+    color: var(--primary-color);
+    /* Tidak perlu background penuh, cukup warna teks yang menonjol */
+}

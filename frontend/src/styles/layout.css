@@ -1,0 +1,51 @@
+/*
+ * -- src/styles/layout.css --
+ * Styling untuk struktur MainLayout
+ */
+
+/* 1. CONTAINER UTAMA */
+.main-layout-container {
+    overflow-x: hidden; /* Mencegah scrollbar horizontal yang tidak diinginkan */
+}
+
+/* 2. WRAPPER AREA KONTEN */
+.content-area-wrapper {
+    /* Padding atas untuk memberi ruang pada HEADER fixed */
+    padding-top: var(--header-height); 
+}
+
+
+/* 3. MAIN CONTENT (Kunci Solusi) */
+.main-content {
+    /* 🎯 PENTING: Margin kiri yang sama dengan lebar sidebar */
+    margin-left: var(--sidebar-width-desktop); /* Default: 250px */
+    padding: 20px; /* Padding di sekitar konten */
+    
+    /* Memastikan konten mengisi sisa ruang vertikal */
+    min-height: calc(100vh - var(--header-height));
+    background-color: var(--bg-page); /* Menggunakan warna dari theme.css */
+
+    /* Transisi untuk animasi responsive */
+    transition: margin-left var(--transition-speed);
+}
+
+
+/* 4. OVERLAY MOBILE */
+.mobile-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.4); /* Background gelap transparan */
+    z-index: 998; /* Harus lebih rendah dari Sidebar (999), tapi lebih tinggi dari konten */
+}
+
+
+/* 5. RESPONSIVE (Mobile/Tablet) */
+@media (max-width: 992px) { 
+    .main-content {
+        /* Di mobile, hapus margin kiri */
+        margin-left: 0; 
+    }
+}

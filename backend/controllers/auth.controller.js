@@ -45,6 +45,7 @@ exports.login = async (req, res) => {
                 id: user.id,
                 full_name: user.full_name,
                 username: user.username,
+                email:user.email
             },
             // KIRIM DAFTAR IZIN EFEKTIF KE FRONTEND
             permissions: effectivePermissions 
