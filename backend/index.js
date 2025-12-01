@@ -4,6 +4,7 @@ require('dotenv').config();
 const express = require('express');
 const bodyParser = require('body-parser');
 const cors = require('cors');
+const setupRoutes = require('./routes');
 
 const app = express();
 const port = process.env.PORT || 5001;
@@ -27,15 +28,7 @@ app.use(bodyParser.urlencoded({ extended: true }));
 
 // --- 3. Pemuatan Routes ---
 // Import routes auth Anda
-const authRoutes = require('./routes/auth.routes'); 
-app.use('/api/auth', authRoutes);
-
-const menuRoutes = require('./routes/menu.routes'); 
-app.use('/api/menu', menuRoutes);
-
-// Contoh Route Lain:
-// const pinjamanRoutes = require('./routes/pinjaman.routes');
-// app.use('/api/pinjaman', pinjamanRoutes);
+setupRoutes(app);
 
 
 // --- 4. Server Listener ---

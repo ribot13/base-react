@@ -15,6 +15,7 @@ import LoginPage from "./pages/LoginPage.jsx";
 import MainLayout from "./layouts/MainLayout.jsx"; 
 import DashboardPage from "./pages/DashboardPage.jsx";
 import MenuAdmin from './pages/MenuAdmin';
+import UserAdminPage from "./pages/UserAdminPage.jsx";
 //import MembersPage from './pages/MembersPage.jsx'; // Contoh komponen halaman
 
 // Komponen Pembungkus untuk Route Terproteksi
@@ -43,6 +44,7 @@ const App = () => (
 
                   {/* Tambahkan rute untuk Simpanan, Pinjaman, dll. */}
                   <Route path="/admin/menu" element={<MenuAdmin />} />
+                  <Route path="/admin/users" element={<UserAdminPage />} />
                   {/* Redirect default ke Dashboard jika sudah login */}
                   <Route path="/" element={<Navigate to="/dashboard" />} />
                 </Routes>
