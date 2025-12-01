@@ -135,6 +135,7 @@
     border: 1px solid var(--border-color);
     padding: 10px 0;
     animation: fadeIn 0.15s ease-out; /* Tambahkan sedikit animasi */
+    z-index: 1000;
 }
 
 .dropdown-user-info {

@@ -15,8 +15,9 @@ import LoginPage from "./pages/LoginPage.jsx";
 import MainLayout from "./layouts/MainLayout.jsx"; 
 import DashboardPage from "./pages/DashboardPage.jsx";
 import MenuAdmin from './pages/MenuAdmin';
+//Administrasi User
 import UserAdminPage from "./pages/UserAdminPage.jsx";
-//import MembersPage from './pages/MembersPage.jsx'; // Contoh komponen halaman
+import UserFormPage from "./pages/UserFormPage.jsx";
 
 // Komponen Pembungkus untuk Route Terproteksi
 const PrivateRoute = ({ children }) => {
@@ -39,12 +40,14 @@ const App = () => (
             <PrivateRoute>
               <MainLayout>
                 <Routes>
-                  {/* Masukkan rute yang hanya me-load konten di sini */}
+                  {/* Dashboard */}
                   <Route path="/dashboard" element={<DashboardPage />} />
 
-                  {/* Tambahkan rute untuk Simpanan, Pinjaman, dll. */}
+                  {/* Administrasi Menu. */}
                   <Route path="/admin/menu" element={<MenuAdmin />} />
+                  {/* Manajemen User */}
                   <Route path="/admin/users" element={<UserAdminPage />} />
+                  <Route path="/admin/users/:id" element={<UserFormPage />} />
                   {/* Redirect default ke Dashboard jika sudah login */}
                   <Route path="/" element={<Navigate to="/dashboard" />} />
                 </Routes>
