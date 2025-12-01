@@ -4,7 +4,8 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import { toast } from 'react-toastify'; 
 
 const AuthContext = createContext();
-const API_BASE_URL = 'http://localhost:5001/api'; // 🎯 PASTIKAN URL BACKEND ANDA BENAR
+import { APP_CONFIG } from '../config/appConfig';
+const API_BASE_URL = APP_CONFIG.API_BASE_URL;
 
 export const AuthProvider = ({ children }) => {
     // State dasar (tidak berubah)
@@ -72,14 +73,8 @@ export const AuthProvider = ({ children }) => {
         setMenuVersion(newMenuVersion); // Update state versi menu
         setIsLoggedIn(true);
 
-        // 2. Cek Versi Menu (Caching Logic)
-        const localVersion = localStorage.getItem('menuVersion');
-        
-        // Jika versi lokal TIDAK ADA atau TIDAK SAMA dengan versi baru dari backend
-        if (localVersion !== newMenuVersion || !sidebarMenu.length) {
-            fetchAndSetMenu(authToken, newMenuVersion);
-        }
-
+        newMenuVersion=userData?.menuVersion || 'v1.0.0';
+        fetchAndSetMenu(authToken,newMenuVersion);
         // Toast notifikasi
         const name = userData?.full_name || "Pengguna";
         toast.success(`Selamat datang, ${name}!`); 

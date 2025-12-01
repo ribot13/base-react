@@ -2,6 +2,7 @@
 import React from 'react';
 import Sidebar from '../components/Sidebar.jsx'; 
 import Header from '../components/Header.jsx';
+import '../styles/main.css';
 
 const MainLayout = ({ children }) => {
     return (

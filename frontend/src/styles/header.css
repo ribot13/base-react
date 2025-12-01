@@ -1,3 +1,36 @@
+
+.main-header {
+    /* 1. Posisi dan Layout Header */
+    position: fixed; /* Header tetap di atas */
+    top: 0;
+    right: 0;
+    /* Lebar = 100% - Lebar Sidebar (250px) */
+    left: 250px; 
+    
+    height: 60px; /* Tinggi header */
+    background-color: white; 
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1); 
+    z-index: 998; /* Di bawah sidebar (z-index: 999) */
+    
+    /* 2. Flexbox untuk menata Judul dan Profil */
+    display: flex;
+    justify-content: space-between; /* Judul di kiri, Profil di kanan */
+    align-items: center;
+    padding: 0 20px;
+}
+
+/* 3. Styling Judul Aplikasi */
+.app-title-display {
+    display: flex;
+    align-items: center;
+}
+
+.app-name {
+    font-size: 18px;
+    font-weight: 600;
+    color: #1e3c39; /* Gunakan warna hijau gelap dari sidebar */
+    text-transform: uppercase;
+}
 /* ====================================================== */
 /* --- Styling untuk Header.jsx (Dropdown Profil) --- */
 /* ====================================================== */

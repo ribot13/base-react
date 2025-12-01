@@ -8,12 +8,13 @@ import {
 } from "react-router-dom";
 import { AuthProvider, useAuth } from "./context/AuthContext.jsx";
 import "./config.json";
-import { ToastContainer } from "react-toastify"; // 👈 Import ini
-import "react-toastify/dist/ReactToastify.css"; // 👈 Import CSS
+import { ToastContainer } from "react-toastify"; 
+import "react-toastify/dist/ReactToastify.css"; 
 
 import LoginPage from "./pages/LoginPage.jsx";
-import MainLayout from "./layouts/MainLayout.jsx"; // 👈 Impor Layout Utama
+import MainLayout from "./layouts/MainLayout.jsx"; 
 import DashboardPage from "./pages/DashboardPage.jsx";
+import MenuAdmin from './pages/MenuAdmin';
 //import MembersPage from './pages/MembersPage.jsx'; // Contoh komponen halaman
 
 // Komponen Pembungkus untuk Route Terproteksi
@@ -41,7 +42,7 @@ const App = () => (
                   <Route path="/dashboard" element={<DashboardPage />} />
 
                   {/* Tambahkan rute untuk Simpanan, Pinjaman, dll. */}
-
+                  <Route path="/admin/menu" element={<MenuAdmin />} />
                   {/* Redirect default ke Dashboard jika sudah login */}
                   <Route path="/" element={<Navigate to="/dashboard" />} />
                 </Routes>
