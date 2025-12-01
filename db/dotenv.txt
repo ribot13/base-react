@@ -1,0 +1,11 @@
+#place this file in backend root folder, modify params below to suit your environment, and then rename this file to .env 
+
+PORT=5001 #backend port
+
+DB_DIALECT=mysql #your db dialect
+DB_HOST=localhost
+DB_USER=root
+DB_PASSWORD=yourpassword
+DB_NAME=yourbdname
+
+JWT_SECRET=GOOENOUGHSECRETKEY
