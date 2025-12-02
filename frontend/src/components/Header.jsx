@@ -14,7 +14,7 @@ import {
 } from "react-icons/fi";
 import "../styles/components/header.css";
 // Import logo.svg (pastikan path ini sesuai)
-import logo from "../../public/logo.svg";
+import logo from "../assets/logo.svg";
 
 // 🎯 Pastikan Header menerima fungsi toggle dari MainLayout
 const Header = ({ onSidebarToggle }) => {
