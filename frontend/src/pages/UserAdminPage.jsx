@@ -1,14 +1,12 @@
-/* eslint-disable no-unused-vars */
+ 
 /* eslint-disable react-hooks/exhaustive-deps */
-import React, { useState, useEffect, useCallback } from "react"; // 👈 Tambahkan useCallback
+import React, { useState, useEffect, useCallback } from "react"; 
 import { useNavigate } from "react-router-dom";
-import { FiUsers, FiEdit2, FiTrash2, FiPlus, FiLoader } from "react-icons/fi";
+import { FiUsers, FiEdit, FiTrash2, FiPlus, FiLoader, FiRefreshCw, FiUserCheck, FiUserX } from "react-icons/fi";
 import { toast } from "react-toastify";
 import { useAuth } from "../context/AuthContext";
 import { useAccessControl } from "../hooks/useAccessControl";
 import { fetchUsers, fetchRoles, deleteUser } from "../services/userService";
-
-import "../styles/pages/admin-page.css";
 
 const UserAdminPage = () => {
   const { token, user } = useAuth();
@@ -27,48 +25,34 @@ const UserAdminPage = () => {
   const canManageUsers = canAccess(REQUIRED_PERMISSION);
 
   // ----------------------------------------------------
-  // 2. DATA FETCHING (Dibuat STABIL dengan useCallback)
+  // 2. DATA FETCHING
   // ----------------------------------------------------
-
-  // 🎯 PERBAIKAN 1: Gunakan useCallback untuk menstabilkan fungsi ini.
-  // Fungsi ini hanya akan dibuat ulang jika token berubah.
   const loadData = useCallback(async () => {
     setLoading(true);
     try {
-      // Ambil data users dan roles secara paralel
       const [usersData, rolesData] = await Promise.all([
         fetchUsers(token),
         fetchRoles(token),
       ]);
-
       setUsers(usersData);
       setRoles(rolesData);
     } catch (error) {
-      // Error handling yang lebih baik
-      const errorMessage =
-        error.message ||
-        "Gagal memuat data pengguna. Cek koneksi backend atau izin akses.";
+      const errorMessage = error.message || "Gagal memuat data pengguna.";
       toast.error(errorMessage);
     } finally {
       setLoading(false);
     }
-  }, [token]); // 👈 loadData hanya bergantung pada token
+  }, [token]);
 
-  // 🎯 PERBAIKAN 2: Sesuaikan dependency array
   useEffect(() => {
     if (canManageUsers && token) {
-      // Jika ada izin & token, panggil fungsi stabil
       loadData();
     } else if (!canManageUsers && !loading) {
-      // Menghindari toast saat render awal jika tidak punya izin
       toast.error("Anda tidak memiliki izin untuk mengakses halaman ini.");
     } else {
-      // Pastikan loading berhenti jika tidak ada token/izin
       setLoading(false);
     }
-  }, [loadData, canManageUsers, token]); // 👈 Gunakan loadData, canManageUsers, dan token sebagai dependensi
-  // Catatan: loading tidak dimasukkan sebagai dependency untuk mencegah loop
-  // jika setLoading(false) di block 'else'
+  }, [loadData, canManageUsers, token]);
 
   // ----------------------------------------------------
   // 3. HANDLER CRUD
@@ -82,31 +66,38 @@ const UserAdminPage = () => {
     navigate(`/admin/users/${user.id}`);
   };
 
+  // Logic Hapus User
   const handleDelete = async (targetUser) => {
-    
+    if (window.confirm(`Apakah Anda yakin ingin menghapus user "${targetUser.username}"?`)) {
+      try {
+        await deleteUser(token, targetUser.id);
+        toast.success("Pengguna berhasil dihapus.");
+        loadData(); // Reload data
+      } catch (error) {
+        toast.error("Gagal menghapus pengguna: " + error.message);
+      }
+    }
   };
 
   // ----------------------------------------------------
   // 4. LOGIKA LEVEL ROLE (Frontend Check)
   // ----------------------------------------------------
   const isDeleteDisabled = (targetUser) => {
-    // 1. Constraint 1: User tidak dapat menghapus diri sendiri
-    if (targetUser.id === loggedInUserId) {
-      return true;
-    }
-
-    // 2. Constraint 2: Level Penghapus HARUS lebih tinggi dari Level Target
-    if (loggedInUserLevel <= targetUser.highestRoleLevel) {
-      return true;
-    }
-
+    // 1. Constraint: Tidak bisa hapus diri sendiri
+    if (targetUser.id === loggedInUserId) return true;
+    // 2. Constraint: Level Penghapus HARUS lebih tinggi dari Level Target
+    if (loggedInUserLevel <= targetUser.highestRoleLevel) return true;
+    
     return false;
   };
 
   if (!canManageUsers && !loading) {
     return (
-      <div className="page-container">
-        <p>Akses Ditolak: Anda tidak memiliki izin untuk mengelola pengguna.</p>
+      <div className="admin-page-container">
+        <div className="card-panel" style={{ textAlign: 'center', color: 'var(--error-color)' }}>
+            <h3>Akses Ditolak</h3>
+            <p>Anda tidak memiliki izin untuk mengelola pengguna.</p>
+        </div>
       </div>
     );
   }
@@ -117,11 +108,11 @@ const UserAdminPage = () => {
 
   return (
     <div className="admin-page-container">
-      <h1 className="page-title">
-        <FiUsers /> Manajemen Pengguna
-      </h1>
-
-      <div className="toolbar" style={{marginBottom:'10px',textAlign:'right'}}>
+      {/* --- HEADER --- */}
+      <div className="page-header">
+        <h2 className="page-title">
+          <FiUsers size={24} /> Manajemen Pengguna
+        </h2>
         <button
           className="btn btn-primary"
           onClick={handleAdd}
@@ -131,75 +122,95 @@ const UserAdminPage = () => {
         </button>
       </div>
 
-      <div className="admin-table-wrapper card-panel">
+      {/* --- CONTENT CARD --- */}
+      <div className="card-panel">
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
+             <h3 style={{ margin: 0, fontSize: '1.1rem' }}>Daftar Pengguna ({users.length})</h3>
+             <button className="btn btn-secondary btn-icon-sm" onClick={loadData} title="Refresh Data">
+                <FiRefreshCw />
+             </button>
+        </div>
+
         {loading ? (
-          <div className="loading-state">
-            <FiLoader size={30} className="spinner" /> Memuat data...
+          <div style={{ textAlign: 'center', padding: '40px', color: 'var(--text-muted)' }}>
+            <FiLoader className="spin-animation" size={30} />
+            <p style={{ marginTop: '10px' }}>Memuat data pengguna...</p>
           </div>
         ) : (
-          <table className="data-table">
-            <thead>
-              <tr>
-                <th>ID</th>
-                <th>Nama Lengkap</th>
-                <th>Username</th>
-                <th>Email</th>
-                <th>Roles</th>
-                <th>Status</th>
-                <th>Aksi</th>
-              </tr>
-            </thead>
-            <tbody>
-              {users.map((u) => (
-                <tr key={u.id}>
-                  <td>{u.id}</td>
-                  <td>{u.full_name}</td>
-                  <td>{u.username}</td>
-                  <td>{u.email || "N/A"}</td>
-                  <td>
-                    {/* FIX: Optional Chaining untuk mencegah error 'map' pada undefined */}
-                    {u.Roles?.map((r) => r.name).join(", ") || "N/A"}
-                  </td>
-                  <td>
-                    <span
-                      className={`status-tag ${
-                        u.is_active ? "active" : "inactive"
-                      }`}
-                    >
-                      {u.is_active ? "Aktif" : "Nonaktif"}
-                    </span>
-                  </td>
-                  <td>
-                    <div className="action-buttons">
-                      {/* Tombol Edit */}
-                      <button
-                        className="btn btn-icon btn-edit"
-                        onClick={() => handleEdit(u)}
-                        disabled={!canManageUsers}
-                        title="Edit Pengguna"
-                      >
-                        <FiEdit2 size={16} />
-                      </button>
-
-                      {/* Tombol Delete */}
-                      <button
-                        className="btn btn-icon btn-delete"
-                        onClick={() => handleDelete(u)}
-                        disabled={isDeleteDisabled(u) || !canManageUsers}
-                        title={
-                          isDeleteDisabled(u)
-                            ? "Akses ditolak (Level sama/lebih tinggi atau Akun Anda)"
-                            : "Hapus Pengguna"
-                        }
-                      >
-                        <FiTrash2 size={16} />
-                      </button>
-                    </div>
-                  </td>
+          <div className="table-responsive">
+            <table className="data-table">
+              <thead>
+                <tr>
+                  <th width="5%">ID</th>
+                  <th>Nama Lengkap</th>
+                  <th>Username</th>
+                  <th>Email</th>
+                  <th>Roles</th>
+                  <th style={{ textAlign: 'center' }}>Status</th>
+                  <th style={{ textAlign: 'center' }}>Aksi</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {users.length > 0 ? (
+                    users.map((u) => (
+                    <tr key={u.id}>
+                        <td>{u.id}</td>
+                        <td style={{ fontWeight: 500 }}>{u.full_name}</td>
+                        <td style={{ color: 'var(--text-muted)' }}>@{u.username}</td>
+                        <td>{u.email || "-"}</td>
+                        <td>
+                        {u.Roles && u.Roles.length > 0 ? (
+                            u.Roles.map((r, idx) => (
+                                <span key={idx} className="badge badge-neutral" style={{ marginRight: '5px' }}>
+                                    {r.name}
+                                </span>
+                            ))
+                        ) : (
+                            <span style={{ color: 'var(--text-muted)', fontStyle: 'italic' }}>No Role</span>
+                        )}
+                        </td>
+                        <td style={{ textAlign: 'center' }}>
+                        <span className={`badge ${u.is_active ? "badge-success" : "badge-danger"}`}>
+                            {u.is_active ? "Aktif" : "Nonaktif"}
+                        </span>
+                        </td>
+                        <td style={{ textAlign: 'center' }}>
+                        <div style={{ display: 'flex', justifyContent: 'center', gap: '6px' }}>
+                            <button
+                                className="btn btn-secondary btn-icon-sm"
+                                onClick={() => handleEdit(u)}
+                                disabled={!canManageUsers}
+                                title="Edit Pengguna"
+                            >
+                            <FiEdit size={16} />
+                            </button>
+
+                            <button
+                                className="btn btn-danger btn-icon-sm"
+                                onClick={() => handleDelete(u)}
+                                disabled={isDeleteDisabled(u) || !canManageUsers}
+                                title={
+                                    isDeleteDisabled(u)
+                                    ? "Tidak dapat menghapus (Level setara/lebih tinggi atau akun sendiri)"
+                                    : "Hapus Pengguna"
+                                }
+                            >
+                            <FiTrash2 size={16} />
+                            </button>
+                        </div>
+                        </td>
+                    </tr>
+                    ))
+                ) : (
+                    <tr>
+                        <td colSpan="7" style={{ textAlign: 'center', padding: '30px' }}>
+                            Tidak ada data pengguna.
+                        </td>
+                    </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
         )}
       </div>
     </div>

@@ -1,253 +1,310 @@
+ 
 import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
+import { useNavigate, useParams } from 'react-router-dom';
 import { toast } from 'react-toastify';
-import { FiLoader, FiCheck, FiX } from 'react-icons/fi';
-import { 
-    fetchUserById, 
-    fetchRoles, 
-    createUser, 
-    updateUser 
-} from '../services/userService'; // Pastikan semua fungsi ini sudah diexport
-
-// 🎯 KUNCI FIX: Definisikan Struktur State Awal dengan Default Value
-const initialFormState = {
-    username: '',
-    full_name: '',
-    email: '',
-    password: '', // Termasuk untuk mode Tambah
-    role_id: '',  // Sesuai dengan kolom id_role di tabel
-    is_active: true // Sesuai dengan kolom active di tabel
-};
+import { FiUser, FiSave, FiX, FiArrowLeft, FiCheckSquare, FiSquare } from 'react-icons/fi';
+import api from '../services/api'; // Menggunakan instance API langsung agar fleksibel
 
 const UserFormPage = () => {
-    const { token } = useAuth();
-    const { id } = useParams(); 
+    const { id } = useParams(); // Jika ada ID, berarti Mode Edit
     const navigate = useNavigate();
+    const isEditMode = !!id;
 
-    const isEditMode = id !== 'new'; 
-    const [formData, setFormData] = useState(initialFormState); 
-    const [availableRoles, setAvailableRoles] = useState([]);
-    const [loading, setLoading] = useState(isEditMode); 
-    const [isSubmitting, setIsSubmitting] = useState(false);
+    // --- STATE ---
+    const [isLoading, setIsLoading] = useState(false);
+    const [rolesList, setRolesList] = useState([]); // Daftar semua role yang tersedia
+    
+    const [formData, setFormData] = useState({
+        username: '',
+        email: '',
+        full_name: '',
+        password: '', // Kosongkan saat init
+        confirmPassword: '',
+        is_active: true,
+        roles: [] // Array of Role IDs
+    });
 
-    // Handler Perubahan Input
+    // --- FETCH DATA (Roles & User jika Edit) ---
+    useEffect(() => {
+        const loadData = async () => {
+            setIsLoading(true);
+            try {
+                // 1. Ambil daftar Roles dulu
+                const rolesRes = await api.get('/roles');
+                setRolesList(rolesRes.data);
+
+                // 2. Jika Edit Mode, ambil data User
+                if (isEditMode) {
+                    const userRes = await api.get(`/users/${id}`);
+                    const userData = userRes.data;
+                    
+                    // Format data untuk form
+                    setFormData({
+                        username: userData.username,
+                        email: userData.email || '',
+                        full_name: userData.full_name || '',
+                        password: '', // Jangan isi password hash dari DB!
+                        confirmPassword: '',
+                        is_active: userData.is_active,
+                        // Map role object ke array of IDs
+                        roles: userData.Roles ? userData.Roles.map(r => r.id) : [] 
+                    });
+                }
+            } catch (error) {
+                console.error("Gagal memuat data:", error);
+                toast.error("Gagal memuat data formulir.");
+                navigate('/admin/users');
+            } finally {
+                setIsLoading(false);
+            }
+        };
+
+        loadData();
+    }, [id, isEditMode, navigate]);
+
+    // --- HANDLERS ---
     const handleChange = (e) => {
         const { name, value, type, checked } = e.target;
-        setFormData(prevData => ({
-            ...prevData,
-            [name]: type === 'checkbox' ? checked : value,
+        setFormData(prev => ({
+            ...prev,
+            [name]: type === 'checkbox' ? checked : value
         }));
     };
 
-    // 1. Load Data (User dan Roles)
-    useEffect(() => {
-        const loadFormData = async () => {
-            setLoading(true);
-            try {
-                // 1a. Ambil data Roles
-                const rolesData = await fetchRoles(token);
-                setAvailableRoles(rolesData);
-
-                let initialData = initialFormState;
-                
-                // 1b. Jika mode Edit, ambil data User
-                if (isEditMode) {
-                    const userData = await fetchUserById(token, id);
-                    
-                    // Gabungkan data dari API dengan state default untuk menghindari 'undefined'
-                    initialData = { 
-                        ...initialFormState, 
-                        ...userData 
-                    }; 
-                    
-                    // Hapus password dari state di mode edit, agar tidak di-update kecuali diisi
-                    delete initialData.password; 
-                } else if (rolesData.length > 0) {
-                    // Set default role_id jika mode Tambah dan roles sudah dimuat
-                    initialData.role_id = rolesData[0].id;
-                }
-                
-                setFormData(initialData); 
-
-            } catch (error) {
-                toast.error(error.message || "Gagal memuat data form. Kembali ke daftar.");
-                navigate('/admin/users');
-            } finally {
-                setLoading(false);
+    const handleRoleToggle = (roleId) => {
+        setFormData(prev => {
+            const currentRoles = prev.roles;
+            if (currentRoles.includes(roleId)) {
+                // Hapus jika sudah ada (Toggle Off)
+                return { ...prev, roles: currentRoles.filter(id => id !== roleId) };
+            } else {
+                // Tambah jika belum ada (Toggle On)
+                return { ...prev, roles: [...currentRoles, roleId] };
             }
-        };
-        loadFormData();
-    }, [token, id, isEditMode, navigate]); 
+        });
+    };
 
-    // 2. Handler Form Submission
     const handleSubmit = async (e) => {
         e.preventDefault();
-        setIsSubmitting(true);
-        
-        // Filter data yang tidak perlu dikirim (misalnya, password kosong saat edit)
-        const dataToSend = { ...formData };
 
-        if (isEditMode && !dataToSend.password) {
-            delete dataToSend.password;
+        // Validasi Password
+        if (!isEditMode && !formData.password) {
+            toast.error("Password wajib diisi untuk pengguna baru.");
+            return;
+        }
+        if (formData.password && formData.password !== formData.confirmPassword) {
+            toast.error("Konfirmasi password tidak cocok.");
+            return;
         }
 
         try {
+            setIsLoading(true);
+            const payload = { ...formData };
+            
+            // Hapus password dari payload jika kosong (saat edit) agar tidak ter-reset
+            if (isEditMode && !payload.password) {
+                delete payload.password;
+                delete payload.confirmPassword;
+            }
+
             if (isEditMode) {
-                await updateUser(token, id, dataToSend);
+                await api.put(`/users/${id}`, payload);
                 toast.success("Pengguna berhasil diperbarui!");
             } else {
-                // Tambah mode: Password wajib ada di state/formData
-                if (!dataToSend.password) {
-                     toast.error("Password wajib diisi untuk pengguna baru.");
-                     setIsSubmitting(false);
-                     return;
-                }
-                await createUser(token, dataToSend);
-                toast.success("Pengguna baru berhasil ditambahkan!");
+                await api.post('/users', payload);
+                toast.success("Pengguna baru berhasil dibuat!");
             }
-            // Redirect kembali ke halaman admin setelah sukses
-            navigate('/admin/users'); 
 
+            navigate('/admin/users');
         } catch (error) {
-            console.error("Kesalahan Submit:", error);
-            toast.error(error.message || "Gagal menyimpan data pengguna.");
+            console.error("Error submit:", error);
+            const msg = error.response?.data?.message || "Gagal menyimpan data.";
+            toast.error(msg);
         } finally {
-            setIsSubmitting(false);
+            setIsLoading(false);
         }
     };
 
-    if (loading) {
-        return (
-            <div className="page-container flex-center">
-                <FiLoader size={30} className="spinner" />
-                <p>Memuat Form...</p>
-            </div>
-        );
-    }
-
-    // 3. Render Form UI
+    // --- RENDER ---
     return (
-        <div className="page-container user-form-page">
-            <h1 className="page-title">{isEditMode ? 'Edit Pengguna' : 'Tambah Pengguna Baru'}</h1>
-            <div className="card-panel">
-                <form onSubmit={handleSubmit} className="user-form">
+        <div className="admin-page-container">
+            {/* 1. HEADER */}
+            <div className="page-header">
+                <h2 className="page-title">
+                    <button 
+                        className="btn btn-secondary btn-icon-sm" 
+                        onClick={() => navigate('/admin/users')}
+                        style={{ marginRight: '10px' }}
+                    >
+                        <FiArrowLeft />
+                    </button>
+                    {isEditMode ? 'Edit Pengguna' : 'Tambah Pengguna Baru'}
+                </h2>
+            </div>
+
+            {/* 2. FORM CARD */}
+            <div className="card-panel" style={{ maxWidth: '800px' }}>
+                <form onSubmit={handleSubmit}>
                     
-                    {/* Input 1: Username */}
-                    <div className="form-group">
-                        <label htmlFor="username">Username</label>
-                        <input 
-                            type="text" 
-                            id="username"
-                            name="username"
-                            value={formData.username || ''} // Fallback ke '' untuk keamanan
-                            onChange={handleChange} 
-                            required 
-                            disabled={isEditMode} // Username biasanya tidak bisa diedit
-                        />
-                        {isEditMode && <p className="help-text">Username tidak dapat diubah setelah dibuat.</p>}
+                    {/* Bagian A: Informasi Dasar */}
+                    <h4 style={{ marginBottom: '15px', borderBottom: '1px solid var(--border-color)', paddingBottom: '10px' }}>
+                        <FiUser style={{ marginRight: '8px' }} /> Informasi Akun
+                    </h4>
+                    
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+                        <div className="form-group">
+                            <label className="form-label">Username <span style={{color:'red'}}>*</span></label>
+                            <input 
+                                type="text" 
+                                className="form-control"
+                                name="username"
+                                value={formData.username}
+                                onChange={handleChange}
+                                required
+                                disabled={isEditMode} // Username biasanya tidak boleh diganti sembarangan
+                                placeholder="Contoh: arie.ramdhani"
+                            />
+                        </div>
+                        <div className="form-group">
+                            <label className="form-label">Nama Lengkap <span style={{color:'red'}}>*</span></label>
+                            <input 
+                                type="text" 
+                                className="form-control"
+                                name="full_name"
+                                value={formData.full_name}
+                                onChange={handleChange}
+                                required
+                                placeholder="Nama Lengkap User"
+                            />
+                        </div>
                     </div>
 
-                    {/* Input 2: Full Name */}
                     <div className="form-group">
-                        <label htmlFor="full_name">Nama Lengkap</label>
-                        <input 
-                            type="text" 
-                            id="full_name"
-                            name="full_name"
-                            value={formData.full_name || ''}
-                            onChange={handleChange} 
-                            required 
-                        />
-                    </div>
-
-                    {/* Input 3: Email */}
-                    <div className="form-group">
-                        <label htmlFor="email">Email</label>
+                        <label className="form-label">Alamat Email</label>
                         <input 
                             type="email" 
-                            id="email"
+                            className="form-control"
                             name="email"
-                            value={formData.email || ''}
-                            onChange={handleChange} 
-                            required 
-                        />
-                    </div>
-
-                    {/* Input 4: Password (Hanya wajib di mode Tambah) */}
-                    <div className="form-group">
-                        <label htmlFor="password">Password {isEditMode ? "(Kosongkan jika tidak ingin diubah)" : "*"}</label>
-                        <input 
-                            type="password" 
-                            id="password"
-                            name="password"
-                            // Nilai harus selalu string kosong agar tidak ada controlled/uncontrolled warning
-                            value={formData.password || ''} 
-                            onChange={handleChange} 
-                            required={!isEditMode} 
-                        />
-                    </div>
-
-                    {/* Input 5: Role (SELECT id_role) */}
-                    <div className="form-group">
-                        <label htmlFor="role_id">Role Pengguna</label>
-                        <select 
-                            id="role_id" 
-                            name="role_id"
-                            value={formData.role_id || ''}
+                            value={formData.email}
                             onChange={handleChange}
-                            required
-                            disabled={!availableRoles.length}
-                        >
-                            <option value="" disabled>Pilih Role</option>
-                            {availableRoles.map(role => (
-                                <option key={role.id} value={role.id}>
-                                    {role.role_name}
-                                </option>
-                            ))}
-                        </select>
-                    </div>
-
-                    {/* Input 6: Status Aktif (Checkbox is_active) */}
-                    <div className="form-group checkbox-group">
-                        <input 
-                            type="checkbox" 
-                            id="is_active"
-                            name="is_active"
-                            checked={!!formData.is_active} // Gunakan !! untuk memastikan boolean
-                            onChange={handleChange} 
+                            placeholder="user@example.com"
                         />
-                        <label htmlFor="is_active" className="checkbox-label">
-                            {formData.is_active ? 
-                                <><FiCheck className="status-icon active" /> Aktif</> : 
-                                <><FiX className="status-icon inactive" /> Nonaktif</>
-                            }
-                        </label>
                     </div>
 
+                    {/* Bagian B: Keamanan */}
+                    <div style={{ marginTop: '20px', backgroundColor: '#f9fafb', padding: '15px', borderRadius: '8px' }}>
+                        <div className="form-group">
+                            <label className="form-label">
+                                {isEditMode ? 'Password Baru (Opsional)' : 'Password'}
+                                {isEditMode && <small style={{ fontWeight: 'normal', color: 'var(--text-muted)', marginLeft: '5px' }}>- Kosongkan jika tidak ingin mengubah</small>}
+                            </label>
+                            <input 
+                                type="password" 
+                                className="form-control"
+                                name="password"
+                                value={formData.password}
+                                onChange={handleChange}
+                                placeholder={isEditMode ? "********" : "Masukan password kuat"}
+                            />
+                        </div>
+                        {formData.password && (
+                            <div className="form-group">
+                                <label className="form-label">Konfirmasi Password</label>
+                                <input 
+                                    type="password" 
+                                    className="form-control"
+                                    name="confirmPassword"
+                                    value={formData.confirmPassword}
+                                    onChange={handleChange}
+                                    placeholder="Ulangi password"
+                                />
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Bagian C: Roles & Status */}
+                    <div style={{ marginTop: '25px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '30px' }}>
+                        
+                        {/* Pilihan Roles */}
+                        <div>
+                            <label className="form-label" style={{ marginBottom: '10px', display: 'block' }}>Peran (Roles)</label>
+                            <div style={{ 
+                                display: 'flex', 
+                                flexDirection: 'column', 
+                                gap: '8px', 
+                                border: '1px solid var(--border-color)', 
+                                padding: '15px', 
+                                borderRadius: '6px',
+                                maxHeight: '200px',
+                                overflowY: 'auto',
+                                backgroundColor: '#fff'
+                            }}>
+                                {rolesList.length > 0 ? rolesList.map(role => (
+                                    <div 
+                                        key={role.id} 
+                                        onClick={() => handleRoleToggle(role.id)}
+                                        style={{ 
+                                            display: 'flex', 
+                                            alignItems: 'center', 
+                                            cursor: 'pointer',
+                                            padding: '5px',
+                                            borderRadius: '4px',
+                                            backgroundColor: formData.roles.includes(role.id) ? '#f0f9ff' : 'transparent'
+                                        }}
+                                    >
+                                        <span style={{ 
+                                            marginRight: '10px', 
+                                            color: formData.roles.includes(role.id) ? 'var(--primary-color)' : '#ccc',
+                                            display: 'flex', alignItems: 'center'
+                                        }}>
+                                            {formData.roles.includes(role.id) ? <FiCheckSquare size={20}/> : <FiSquare size={20}/>}
+                                        </span>
+                                        <span style={{ fontWeight: formData.roles.includes(role.id) ? '600' : '400' }}>
+                                            {role.name}
+                                        </span>
+                                    </div>
+                                )) : <p style={{ color: 'var(--text-muted)' }}>Belum ada data role.</p>}
+                            </div>
+                        </div>
+
+                        {/* Status Aktif */}
+                        <div>
+                            <label className="form-label">Status Akun</label>
+                            <div style={{ marginTop: '10px', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                <label className="switch" style={{ display: 'flex', alignItems: 'center', cursor: 'pointer' }}>
+                                    <input 
+                                        type="checkbox" 
+                                        name="is_active"
+                                        checked={formData.is_active}
+                                        onChange={handleChange}
+                                        style={{ width: '20px', height: '20px', cursor: 'pointer' }}
+                                    />
+                                    <span style={{ marginLeft: '10px', fontWeight: '500' }}>
+                                        {formData.is_active ? 'Aktif (Bisa Login)' : 'Nonaktif (Dibekukan)'}
+                                    </span>
+                                </label>
+                            </div>
+                            <p style={{ marginTop: '10px', fontSize: '0.85rem', color: 'var(--text-muted)' }}>
+                                Jika dinonaktifkan, pengguna tidak akan bisa masuk ke dalam sistem.
+                            </p>
+                        </div>
+                    </div>
 
                     {/* Tombol Aksi */}
-                    <div className="form-actions mt-30">
-                        <button 
-                            type="submit" 
-                            className="btn btn-primary"
-                            disabled={isSubmitting || loading}
-                        >
-                            {isSubmitting ? (
-                                <><FiLoader className="spinner" /> Memproses...</>
-                            ) : (
-                                isEditMode ? 'Simpan Perubahan' : 'Buat Pengguna'
-                            )}
+                    <div style={{ marginTop: '40px', display: 'flex', gap: '15px', borderTop: '1px solid var(--border-color)', paddingTop: '20px' }}>
+                        <button type="submit" className="btn btn-primary" disabled={isLoading}>
+                            <FiSave /> {isLoading ? 'Menyimpan...' : 'Simpan Data'}
                         </button>
                         <button 
                             type="button" 
-                            onClick={() => navigate('/admin/users')} 
-                            className="btn btn-secondary"
-                            disabled={isSubmitting}
+                            className="btn btn-secondary" 
+                            onClick={() => navigate('/admin/users')}
+                            disabled={isLoading}
                         >
-                            Batal
+                            <FiX /> Batal
                         </button>
                     </div>
+
                 </form>
             </div>
         </div>
