@@ -32,7 +32,7 @@
     /* ------------------------------------ */
     /* 🎯 2. DIMENSI LAYOUT (KRITIS!) */
     /* ------------------------------------ */
-    --header-height: 55px;          /* Tinggi Header (HARUS SAMA dengan padding-top di layout.css) */
+    --header-height: 64px;          /* Tinggi Header (HARUS SAMA dengan padding-top di layout.css) */
     --sidebar-width-desktop: 250px; /* Lebar Sidebar di Desktop (HARUS SAMA dengan margin-left di layout.css) */
     
     /* Kecepatan Transisi */

@@ -14,15 +14,43 @@
 }
 
 /* --- 2. TYPOGRAPHY UTILITIES --- */
+/* --- PAGE HEADER (Fixed Layout) --- */
 .page-header {
+    /* 1. Tarik mentok ke atas untuk melawan padding container */
+    margin-top: -20px;
+    margin-left: -20px;
+    margin-right: -20px;
+    
+    /* 2. JARAK KE KONTEN BAWAH (Tabel) */
+    margin-bottom: 15px; 
+
+    /* 3. PADDING (INI KUNCINYA) */
+    /* Ubah 12px menjadi 8px atau 6px agar bar lebih tipis */
+    padding: 8px 24px; 
+    
+    /* Style Visual */
+    background-color: var(--bg-card);
+    border-bottom: 1px solid var(--border-color);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+
+    /* Layout */
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 24px;
+    
+    /* Tetapkan tinggi minimal agar tombol tidak gepeng */
+    min-height: 50px; 
+
+    /* Sticky */
+    position: sticky;
+    top: var(--header-height); /* Nempel pas di bawah Header App */
+    z-index: 90; 
 }
 
+/* Perkecil sedikit ukuran font judul jika perlu */
 .page-title {
-    font-size: 1.5rem;
+    margin: 0;
+    font-size: 1.1rem; /* Sedikit lebih kecil dari 1.25rem */
     font-weight: 600;
     color: var(--text-dark);
     display: flex;

@@ -5,34 +5,37 @@
 
 /* 1. CONTAINER SIDEBAR UTAMA */
 .sidebar {
-    /* 🎯 Posisi & Ukuran (Diambil dari theme.css) */
+    /* Tetap Fixed agar menu selalu bisa diakses */
     position: fixed;
-    top: var(--header-height); /* Mulai di bawah header */
+    
+    /* Mulai tepat di bawah Header */
+    top: var(--header-height); 
     left: 0;
+    
+    /* Tinggi sidebar adalah sisa layar */
     height: calc(100vh - var(--header-height));
-    width: var(--sidebar-width-desktop); /* 250px di Desktop */
+    width: var(--sidebar-width-desktop);
     
-    /* Tampilan Soft */
-    background-color: var(--bg-card); /* Putih bersih */
-    box-shadow: var(--shadow-soft); /* Bayangan lembut */
-    z-index: 999;
+    background-color: var(--bg-card);
+    box-shadow: var(--shadow-soft);
     
-    /* Animasi dan Scroll */
+    /* Z-Index di bawah Header (1000) tapi di atas konten */
+    z-index: 900; 
+    
+    overflow-y: auto; /* Agar menu bisa discroll jika itemnya banyak */
+    padding: 10px 0;
     transition: transform var(--transition-speed), width var(--transition-speed);
-    overflow-y: auto; /* Memungkinkan scroll vertikal */
-    padding: 10px 0; /* Padding vertikal untuk menu */
 }
 
-/* 2. RESPONSIVE (Mobile/Tablet) */
+/* Responsive: Sembunyi di kiri layar saat mobile */
 @media (max-width: 992px) { 
     .sidebar {
-        width: 280px; 
-        transform: translateX(-100%); /* 👈 Sembunyikan secara default */
-        /* Tambahkan bayangan yang lebih terlihat saat sidebar muncul */
-        box-shadow: 6px 0 15px rgba(0, 0, 0, 0.15); 
+        transform: translateX(-100%);
+        /* Saat muncul di mobile, sidebar full height menutupi header juga bisa, 
+           tapi settingan ini membuatnya tetap di bawah header */
+        z-index: 1001; /* Di mobile, sidebar harus di atas konten overlay */
     }
     
-    /* 🎯 Class yang di-toggle oleh React state: Sidebar Terbuka */
     .sidebar.is-open {
         transform: translateX(0); 
     }
