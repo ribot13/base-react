@@ -1,134 +1,14 @@
 /* src/styles/pages/admin-page.css */
+/* * File ini sekarang lebih bersih. 
+ * Style umum (btn, table, card) sudah pindah ke ui-components.css 
+ */
 
-/* 1. CONTAINER & HEADER */
+/* Layout Container khusus Admin */
 .admin-page-container {
     padding: 10px;
 }
 
-.admin-page-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 20px;
-}
-
-.page-title {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    font-size: 24px;
-    color: var(--text-dark);
-}
-
-/* 2. CARD PANEL (Untuk membungkus tabel) */
-.card-panel {
-    background-color: var(--bg-card);
-    border-radius: 8px;
-    box-shadow: var(--shadow-soft);
-    padding: 20px;
-}
-
-/* 3. BUTTONS (Standard & Icon) */
-.btn {
-    padding: 8px 15px;
-    border: none;
-    border-radius: 6px;
-    cursor: pointer;
-    font-weight: 600;
-    transition: background-color 0.2s;
-    display: inline-flex;
-    align-items: center;
-    gap: 5px;
-    /* Pastikan warna teks terbaca */
-    color: var(--text-on-primary); 
-}
-.btn:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
-}
-
-.btn-primary {
-    background-color: var(--primary-color);
-}
-.btn-primary:hover {
-    background-color: color-mix(in srgb, var(--primary-color) 85%, black);
-}
-
-.btn-secondary {
-    background-color: var(--border-color);
-    color: var(--text-dark);
-}
-.btn-secondary:hover:not(:disabled) {
-    background-color: color-mix(in srgb, var(--border-color) 85%, black);
-}
-
-.btn-icon {
-    padding: 8px;
-    width: 34px;
-    height: 34px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    border-radius: 4px;
-}
-
-.btn-edit {
-    background-color: var(--secondary-color);
-}
-.btn-delete {
-    background-color: var(--error-color);
-}
-.action-buttons {
-    display: flex;
-    gap: 5px;
-}
-
-
-/* 4. DATA TABLE */
-.data-table {
-    width: 100%;
-    border-collapse: collapse;
-    margin-top: 15px;
-    font-size: 14px;
-}
-
-.data-table th, .data-table td {
-    padding: 12px 15px;
-    text-align: left;
-    border-bottom: 1px solid var(--border-color);
-}
-
-.data-table th {
-    background-color: var(--bg-page); 
-    font-weight: 700;
-    color: var(--text-dark);
-}
-
-.data-table tbody tr:hover {
-    background-color: color-mix(in srgb, var(--bg-page) 50%, transparent);
-}
-
-/* 5. TAG STATUS (Aktif/Nonaktif) */
-.status-tag {
-    padding: 4px 8px;
-    border-radius: 4px;
-    font-size: 12px;
-    font-weight: 600;
-    text-transform: uppercase;
-}
-
-.status-tag.active {
-    background-color: color-mix(in srgb, var(--success-color) 20%, transparent);
-    color: var(--success-color);
-}
-
-.status-tag.inactive {
-    background-color: color-mix(in srgb, var(--error-color) 20%, transparent);
-    color: var(--error-color);
-}
-
-
-/* 6. PAGINASI */
+/* Pagination Control (Spesifik letaknya di bawah tabel) */
 .pagination-controls {
     display: flex;
     justify-content: flex-end; 
@@ -137,4 +17,10 @@
     margin-top: 20px;
     padding-top: 15px;
     border-top: 1px solid var(--border-color);
+}
+
+/* Action Buttons Wrapper di dalam Tabel */
+.action-buttons {
+    display: flex;
+    gap: 8px;
 }
