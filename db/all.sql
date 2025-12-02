@@ -11,7 +11,7 @@
  Target Server Version : 80044 (8.0.44)
  File Encoding         : 65001
 
- Date: 02/12/2025 20:27:32
+ Date: 02/12/2025 20:59:14
 */
 
 SET NAMES utf8mb4;
@@ -36,7 +36,7 @@ CREATE TABLE `menu_items`  (
   UNIQUE INDEX `path_unique`(`path` ASC) USING BTREE,
   INDEX `parent_id`(`parent_id` ASC) USING BTREE,
   CONSTRAINT `menu_items_ibfk_1` FOREIGN KEY (`parent_id`) REFERENCES `menu_items` (`id`) ON DELETE SET NULL ON UPDATE CASCADE
-) ENGINE = InnoDB AUTO_INCREMENT = 13 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB AUTO_INCREMENT = 14 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of menu_items
@@ -47,11 +47,11 @@ INSERT INTO `menu_items` VALUES (3, 'Pengaturan Sistem', '', 'manage-system', 'F
 INSERT INTO `menu_items` VALUES (4, 'Pesanan Baru', '/orders', 'read-order', 'FiShoppingBag', 1, 11, 1, '2025-11-30 14:13:23', '2025-12-02 12:21:38');
 INSERT INTO `menu_items` VALUES (5, 'Pengiriman ', '/orders/shipping', 'read-order-shipping', 'FiTruck', 1, 12, 1, '2025-11-30 14:14:30', '2025-12-02 12:20:39');
 INSERT INTO `menu_items` VALUES (7, 'Laporan Keuangan', '/reports/keuangan', 'read-report-keuangan', 'FiFileText', 2, 21, 1, '2025-11-30 14:15:33', '2025-11-30 14:15:33');
-INSERT INTO `menu_items` VALUES (8, 'Laporan Anggota', '/reports/member', 'read-report-member', 'FiUserCheck', 2, 22, 1, '2025-11-30 14:16:02', '2025-11-30 14:16:02');
 INSERT INTO `menu_items` VALUES (9, 'Administrasi Menu', '/admin/menu', 'manage-menu', 'FiList', 3, 101, 1, '2025-11-30 19:58:35', '2025-12-01 07:16:16');
 INSERT INTO `menu_items` VALUES (10, 'Administrasi User', '/admin/users', 'manage-users', 'FiUsers', 3, 102, 1, '2025-12-01 07:10:48', '2025-12-01 14:42:30');
 INSERT INTO `menu_items` VALUES (11, 'Riwayat Pesanan', '/orders/history', 'read-history', 'FiDatabase', 1, 13, 1, '2025-12-02 12:17:29', '2025-12-02 12:20:31');
 INSERT INTO `menu_items` VALUES (12, 'Riwayat Posting', '/orders/posting-history', 'read-posting-history', 'FiArchive', 1, 13, 1, '2025-12-02 12:20:23', '2025-12-02 12:20:23');
+INSERT INTO `menu_items` VALUES (13, 'Laporan Pesanan', '/reports/all', 'read-report', 'FiCircle', 2, 22, 1, '2025-12-02 13:48:12', '2025-12-02 13:48:12');
 
 -- ----------------------------
 -- Table structure for permissions
