@@ -13,11 +13,14 @@ import "react-toastify/dist/ReactToastify.css";
 
 import LoginPage from "./pages/LoginPage.jsx";
 import MainLayout from "./layouts/MainLayout.jsx"; 
-import DashboardPage from "./pages/DashboardPage.jsx";
-import MenuAdmin from './pages/MenuAdmin';
+//Dashboard";
+import DashboardPage from "./pages/Dashboard";
+//Pengaturan Sistem
+//Adminisrtasi Menu
+import MenuAdmin from './pages/MenuAdministrasi';
 //Administrasi User
-import UserAdminPage from "./pages/UserAdminPage.jsx";
-import UserFormPage from "./pages/UserFormPage.jsx";
+import UserAdminPage from "./pages/Users/index.jsx";
+import UserFormPage from "./pages/Users/form.jsx";
 
 // Komponen Pembungkus untuk Route Terproteksi
 const PrivateRoute = ({ children }) => {

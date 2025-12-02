@@ -1,6 +1,6 @@
 /* eslint-disable no-unused-vars */
 // src/pages/MenuAdmin.jsx
-import { APP_CONFIG } from '../config/appConfig';
+import { APP_CONFIG } from '../../config/appConfig';
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 // 👇 1. IMPORT SEMUA ICON DARI FI AGAR BISA DIPANGGIL DINAMIS

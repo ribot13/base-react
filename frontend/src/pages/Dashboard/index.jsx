@@ -1,7 +1,7 @@
 /* eslint-disable react-hooks/set-state-in-effect */
 // src/pages/DashboardPage.jsx
 import React, { useEffect, useState } from 'react';
-import usePageTitle from '../hooks/usePageTitle.js';
+import usePageTitle from '../../hooks/usePageTitle.js';
 import { FiUser, FiShield, FiDatabase, FiInfo } from 'react-icons/fi';
 
 const DashboardPage = () => {

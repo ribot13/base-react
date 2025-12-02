@@ -4,9 +4,9 @@ import React, { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { FiUsers, FiEdit, FiTrash2, FiPlus, FiLoader, FiRefreshCw, FiUserCheck, FiUserX } from "react-icons/fi";
 import { toast } from "react-toastify";
-import { useAuth } from "../context/AuthContext";
-import { useAccessControl } from "../hooks/useAccessControl";
-import { fetchUsers, fetchRoles, deleteUser } from "../services/userService";
+import { useAuth } from "../../context/AuthContext";
+import { useAccessControl } from "../../hooks/useAccessControl";
+import { fetchUsers, fetchRoles, deleteUser } from "../../services/userService";
 
 const UserAdminPage = () => {
   const { token, user } = useAuth();
