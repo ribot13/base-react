@@ -11,7 +11,7 @@ import "./config.json";
 import { ToastContainer } from "react-toastify"; 
 import "react-toastify/dist/ReactToastify.css"; 
 
-import LoginPage from "./pages/LoginPage.jsx";
+import LoginPage from "./pages/Auth";
 import MainLayout from "./layouts/MainLayout.jsx"; 
 //Dashboard";
 import DashboardPage from "./pages/Dashboard";
@@ -61,7 +61,7 @@ const App = () => (
       </Routes>
       <ToastContainer
         position="top-right"
-        autoClose={3000}
+        autoClose={5000}
         hideProgressBar={false}
         newestOnTop={false}
         closeOnClick

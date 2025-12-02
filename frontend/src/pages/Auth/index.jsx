@@ -5,13 +5,13 @@ import { useNavigate } from "react-router-dom";
 import { FiUser, FiLock, FiLogIn, FiAlertCircle } from "react-icons/fi"; // Icon tambahan
 
 // Import Context & Config
-import { useAuth } from "../context/AuthContext";
-import { APP_CONFIG } from "../config/appConfig"; // Gunakan config pusat
-import usePageTitle from "../hooks/usePageTitle";
+import { useAuth } from "../../context/AuthContext";
+import { APP_CONFIG } from "../../config/appConfig"; // Gunakan config pusat
+import usePageTitle from "../../hooks/usePageTitle";
 
 // Import Assets & Styles
-import Logo from "../assets/logo.svg"; 
-import "../styles/LoginPage.css";
+import Logo from "../../assets/logo.svg"; 
+import "../../styles/LoginPage.css";
 
 // URL API diambil dari config
 const API_URL = `${APP_CONFIG.API_BASE_URL}/auth`;
