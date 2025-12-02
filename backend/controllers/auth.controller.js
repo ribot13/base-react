@@ -47,75 +47,102 @@ exports.login = async (req, res) => {
     const { username, password } = req.body;
 
     try {
-        // 1. Cari Pengguna (TERMASUK ROLE)
+        // ------------------------------------------------------------------
+        // 1. CARI PENGGUNA (TERMASUK ROLE)
+        // ------------------------------------------------------------------
         const user = await User.findOne({ 
             where: { username: username, is_active: 1, _deleted: 0 },
-            // 🎯 KRITIS: Tambahkan 'include' untuk relasi Many-to-Many (User->UserRole->Role)
-            include: [{
-                model: Role, 
-                attributes: ['name'], // Hanya ambil nama role
-                through: { attributes: [] } // Jangan sertakan kolom dari tabel pivot
-            }]
+            include: [
+                {
+                    model: Role,
+                    as: 'Roles', // Pastikan ini sesuai dengan alias di models/index.js
+                    attributes: ['id', 'name', 'level'],
+                    through: { attributes: [] } // Supaya tabel pivot tidak ikut mengotori output
+                }
+            ]
         });
         
         if (!user) {
             return res.status(401).json({ message: "Username atau password salah." });
         }
 
-        // 2. Bandingkan Password
+        // ------------------------------------------------------------------
+        // 2. BANDINGKAN PASSWORD
+        // ------------------------------------------------------------------
         const isMatch = await bcrypt.compare(password, user.password);
         
         if (!isMatch) {
             return res.status(401).json({ message: "Username atau password salah." });
         }
 
-        // --- LOGIKA ROLE DAN LEVEL ---
+        // ------------------------------------------------------------------
+        // 3. LOGIKA PENENTUAN ROLE TERTINGGI (Active Role)
+        // ------------------------------------------------------------------
+        // Kita ubah user instance jadi plain object dulu biar mudah dimanipulasi
         const userPlain = user.get({ plain: true });
-        
-        // A. Hitung Level Tertinggi
-        const roleNames = userPlain.Roles.map(r => ({ name: r.name }));
-        const highestRoleLevel = getUserHighestLevel(roleNames);
-        
-        // B. Tentukan Nama Role Tertinggi (Opsional, untuk tampilan/debug)
-        let highestRoleName = 'user'; // Default
-        for (const [name, level] of Object.entries(ROLE_LEVELS)) {
-            if (level === highestRoleLevel) {
-                // Ini akan memastikan jika Level 4 ditemukan, nama yang diambil adalah 'superadmin'
-                highestRoleName = name; 
-            }
+
+        // Default value
+        let highestRoleLevel = 0;
+        let activeRoleObj = { id: null, name: 'user', level: 0 };
+
+        // Cek apakah user punya roles
+        if (userPlain.Roles && userPlain.Roles.length > 0) {
+            // Urutkan Role dari Level Terbesar ke Terkecil (Descending)
+            // Contoh: [ {name: 'superadmin', level: 4}, {name: 'staff', level: 1} ]
+            userPlain.Roles.sort((a, b) => b.level - a.level);
+
+            // Role pertama setelah diurutkan adalah role tertinggi
+            const highestRole = userPlain.Roles[0];
+            
+            highestRoleLevel = highestRole.level;
+            activeRoleObj = {
+                id: highestRole.id,
+                name: highestRole.name,
+                level: highestRole.level
+            };
         }
-        // --- AKHIR LOGIKA ROLE DAN LEVEL ---
-        
-        // 3. Buat Payload JWT
+
+        // ------------------------------------------------------------------
+        // 4. BUAT TOKEN & AMBIL PERMISSIONS
+        // ------------------------------------------------------------------
         const tokenPayload = { 
             id: user.id, 
-            username: user.username 
+            username: user.username,
+            role_level: highestRoleLevel // Berguna untuk middleware nanti
         };
         const token = jwt.sign(tokenPayload, process.env.JWT_SECRET, { expiresIn: '1d' });
 
-        // 4. Ambil Izin Efektif (Kunci RBA)
+        // Ambil Permission (Pastikan fungsi ini sudah di-import/tersedia)
+        // Jika fungsi ini ada di file lain, pastikan sudah: const { getEffectivePermissionsFromDB } = require('../services/permissionService');
         const effectivePermissions = await getEffectivePermissionsFromDB(user.id);
         
-        // 5. Kirim Respons Berhasil
+        // ------------------------------------------------------------------
+        // 5. KIRIM RESPONS
+        // ------------------------------------------------------------------
         res.status(200).json({
             message: "Login berhasil!",
             token: token,
-            // Kirim data user
             user: {
                 id: user.id,
                 full_name: user.full_name,
                 username: user.username,
-                email:user.email,
-                // 🎯 KRITIS: Kirim role name dan level
-                role_name: highestRoleName, 
-                highestRoleLevel: highestRoleLevel, // Frontend akan menggunakan ini
+                email: user.email,
+                
+                // 🎯 PERBAIKAN UTAMA DI SINI:
+                // Frontend mengharapkan object 'activeRole', bukan sekadar string 'role_name'
+                activeRole: activeRoleObj,
+                
+                // Tetap kirim ini untuk backward compatibility logika frontend lainnya
+                highestRoleLevel: highestRoleLevel, 
+                
+                // Kirim semua roles yang dimiliki
+                Roles: userPlain.Roles,
             },
-            // KIRIM DAFTAR IZIN EFEKTIF KE FRONTEND
             permissions: effectivePermissions 
         });
 
     } catch (error) {
         console.error("💥 KESALAHAN SERVER (500) DI LOGIN:", error);
-        res.status(500).json({ message: "Terjadi kesalahan server." });
+        res.status(500).json({ message: "Terjadi kesalahan server: " + error.message });
     }
 }
