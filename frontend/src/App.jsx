@@ -19,7 +19,7 @@ import DashboardPage from "./pages/Dashboard";
 //Adminisrtasi Menu
 import MenuAdmin from './pages/MenuAdministrasi';
 //Administrasi User
-import UserAdminPage from "./pages/Users/index.jsx";
+import UserAdminPage from "./pages/Users";
 import UserFormPage from "./pages/Users/form.jsx";
 
 // Komponen Pembungkus untuk Route Terproteksi
