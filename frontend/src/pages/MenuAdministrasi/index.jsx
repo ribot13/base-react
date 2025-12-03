@@ -3,9 +3,38 @@
 import { APP_CONFIG } from '../../config/appConfig';
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import {toast} from 'react-toastify';
+// 👇 1. IMPORT SEMUA ICON DARI FI AGAR BISA DIPANGGIL DINAMIS
 import * as FiIcons from 'react-icons/fi'; 
 
 const API_URL = `${APP_CONFIG.API_BASE_URL}/menu`;
+
+// --- HELPER UNTUK MEMBERSIHKAN DATA ---
+const cleanFormData = (data) => {
+    const cleaned = { ...data };
+    
+    // Hapus properti yang bernilai null atau string kosong (kecuali title dan order_index)
+    for (const key in cleaned) {
+        if (cleaned[key] === null || cleaned[key] === '') {
+            // Khusus untuk path, required_permission, dan parent_id: set ke null jika kosong
+            if (key === 'path' || key === 'required_permission' || key === 'parent_id') {
+                cleaned[key] = null;
+            } 
+            // Untuk properti lain yang kosong dan bukan kolom wajib, hapus saja
+            else if (key !== 'title' && key !== 'order_index' && key !== 'is_active' && key !== 'show_in_menu') {
+                 delete cleaned[key];
+            }
+        }
+    }
+    
+    // Khusus untuk operasi CREATE (formData.id === null), hapus ID agar Sequelize menggunakan AUTO_INCREMENT
+    if (cleaned.id === null) {
+        delete cleaned.id;
+    }
+    
+    return cleaned;
+};
+// -------------------------------------
 
 const MenuAdmin = () => {
     const [menuItems, setMenuItems] = useState([]);
@@ -22,6 +51,7 @@ const MenuAdmin = () => {
         parent_id: null,
         order_index: 0,
         is_active: true,
+        show_in_menu:true,
     };
     const [formData, setFormData] = useState(initialFormState);
 
@@ -59,10 +89,12 @@ const MenuAdmin = () => {
         }));
     };
 
+    // --- HANDLER SUBMIT BARU ---
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
             const token = localStorage.getItem('token');
+            // Validasi sederhana: Cek apakah icon valid
             if (!FiIcons[formData.icon_name]) {
                 alert(`Nama icon "${formData.icon_name}" tidak ditemukan di library Feather Icons (Fi)!`);
                 return;
@@ -79,10 +111,10 @@ const MenuAdmin = () => {
             }
             
             setFormData(initialFormState);
-            setShowForm(false);
             fetchMenus();
         } catch (err) {
-            alert('Gagal menyimpan menu.');
+            console.error("Error submit menu:", err);
+            setError(err.response?.data?.message || `Gagal ${isUpdate ? 'update' : 'tambah'} menu. Cek kelengkapan data.`);
         }
     };
 
