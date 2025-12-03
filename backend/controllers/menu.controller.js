@@ -1,58 +1,44 @@
 const { MenuItem } = require('../models');
 
 /**
- * Fungsi pembantu untuk mengubah daftar menu datar menjadi struktur hierarki (Tree).
- * Digunakan untuk menyajikan data ke Sidebar.jsx.
- * * @param {Array<Object>} flatData - Daftar datar semua item menu dari database.
- * @param {number|null} parentId - ID parent yang sedang diproses (null untuk root level).
- * @returns {Array<Object>} Struktur menu hierarki.
+ * Helper: Build Tree
+ * Perubahan: Kita TIDAK memfilter berdasarkan show_in_menu di sini.
+ * Semua data dikirim agar Breadcrumb bisa mendeteksi halaman 'Edit/Tambah'.
  */
 const buildMenuHierarchy = (flatData, parentId = null) => {
     const tree = [];
-
-    // Filter item yang sesuai dengan parentId saat ini.
-    // PENTING: Menggunakan === untuk perbandingan ketat (null vs ID number).
     const items = flatData
         .filter(item => item.parent_id === parentId)
         .sort((a, b) => a.order_index - b.order_index);
 
     items.forEach(item => {
-        // Cari children dari item saat ini secara rekursif.
         const children = buildMenuHierarchy(flatData, item.id);
         
-        // Jika item memiliki children, tambahkan array 'Children'.
+        // Selalu sertakan children jika ada
         if (children.length) {
             item.Children = children;
         }
         
-        // Hanya tambahkan item yang memiliki path (link) atau memiliki children (folder).
-        if (item.path || children.length > 0) {
-            tree.push(item);
-        }
+        // Masukkan ke tree (baik itu folder, link, atau hidden item)
+        tree.push(item);
     });
     return tree;
 };
 
-
-// --------------------------------------------------------------------
-// A. ENDPOINT UNTUK SIDEBAR (DATA HIERARKI)
-// --------------------------------------------------------------------
-
 exports.getSidebarMenu = async (req, res) => {
     try {
-        // Ambil semua item menu yang aktif
+        // Ambil SEMUA item yang aktif (termasuk yang show_in_menu = 0)
         const menuItems = await MenuItem.findAll({
-            where: { is_active: true },
-            // Order berdasarkan order_index, kemudian id (untuk stabilitas)
+            where: { is_active: true }, 
             order: [['order_index', 'ASC'], ['id', 'ASC']], 
+            // Pastikan mengambil kolom 'show_in_menu'
             attributes: [
                 'id', 'title', 'path', 'required_permission', 
-                'icon_name', 'parent_id' 
+                'icon_name', 'parent_id', 'show_in_menu' 
             ]
         });
 
-        // Ubah format data dari flat list menjadi hierarki.
-        // Pemanggilan awal menggunakan parentId = null (default).
+        // Konversi ke Hierarki
         const hierarchicalMenu = buildMenuHierarchy(
             menuItems.map(item => item.get({ plain: true }))
         );
@@ -60,13 +46,8 @@ exports.getSidebarMenu = async (req, res) => {
         return res.status(200).json(hierarchicalMenu);
 
     } catch (error) {
-        console.error("==========================================");
-        console.error("ERROR FETCHING SIDEBAR MENU:", error.message);
-        console.error("ERROR STACK:", error.stack);
-        console.error("==========================================");
-
-        console.error("Error fetching hierarchical menu items:", error);
-        return res.status(500).json({ message: "Gagal mengambil data menu dari database." });
+        console.error("Error fetching menu:", error);
+        return res.status(500).json({ message: "Gagal mengambil data menu." });
     }
 };
 

@@ -121,9 +121,6 @@ const MenuAdmin = () => {
         <div className="admin-page-container">
             {/* --- HEADER --- */}
             <div className="page-header">
-                <h2 className="page-title">
-                    <FiIcons.FiMenu size={24} /> Administrasi Menu
-                </h2>
                 <button 
                     className={`btn ${showForm ? 'btn-secondary' : 'btn-primary'}`} 
                     onClick={() => {

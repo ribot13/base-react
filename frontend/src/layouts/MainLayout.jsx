@@ -2,6 +2,7 @@
 import React, { useState } from 'react';
 import Header from '../components/Header.jsx';
 import Sidebar from '../components/Sidebar.jsx';
+import PageHeader from '../components/PageHeader.jsx';
 // Pastikan semua impor CSS ada dan PATH sudah BENAR
 import '../styles/global.css'; 
 import '../styles/theme.css'; 
@@ -25,6 +26,7 @@ const MainLayout = ({ children }) => {
                 
                 {/* 3. MAIN CONTENT (Harus punya margin kiri di desktop) */}
                 <main className="main-content">
+                    <PageHeader />
                     {children}
                 </main>
                 

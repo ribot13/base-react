@@ -1,0 +1,67 @@
+/* src/styles/components/page-header.css */
+
+.page-header-container {
+    margin-bottom: 24px;
+    padding-bottom: 20px; /* Jarak antara teks ke garis */
+    border-bottom: 1px solid #e2e8f0; /* Garis Pembatas (Divider) */
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.page-title {
+    margin: 0;
+    font-size: 1.5rem; /* Lebih besar karena sekarang jadi judul utama halaman */
+    font-weight: 700;
+    color: #1e293b;
+    letter-spacing: -0.025em;
+}
+
+.breadcrumb {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    font-size: 0.875rem;
+}
+
+.breadcrumb-item {
+    display: flex;
+    align-items: center;
+    color: #64748b;
+}
+
+.breadcrumb-item a {
+    text-decoration: none;
+    color: #64748b;
+    display: flex;
+    align-items: center;
+    transition: color 0.2s;
+}
+
+.breadcrumb-item a:hover {
+    color: #3b82f6; /* Warna Primary Hover */
+}
+
+.breadcrumb-separator {
+    margin: 0 8px;
+    color: #cbd5e1;
+}
+
+.current-page {
+    color: #3b82f6; /* Warna aktif */
+    font-weight: 500;
+}
+
+/* Responsiveness */
+@media (max-width: 768px) {
+    .page-header-container {
+        margin-bottom: 16px;
+    }
+    
+    .page-title {
+        font-size: 1.25rem;
+    }
+}

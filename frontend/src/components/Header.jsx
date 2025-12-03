@@ -1,13 +1,21 @@
 // src/components/Header.jsx
 import React, { useState, useRef, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { FiLogOut, FiUser, FiSettings, FiMenu, FiChevronDown } from "react-icons/fi";
+import {
+  FiLogOut,
+  FiUser,
+  FiSettings,
+  FiMenu,
+  FiChevronDown,
+} from "react-icons/fi";
 import { useAuth } from "../context/AuthContext";
-import Logo from "../assets/logo.svg"; 
+
+import Logo from "../assets/logo.svg";
 import "../styles/components/header.css";
 
 // eslint-disable-next-line no-unused-vars
 const Header = ({ onSidebarToggle, isSidebarOpen }) => {
+  
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
@@ -34,8 +42,8 @@ const Header = ({ onSidebarToggle, isSidebarOpen }) => {
     <header className="app-header">
       {/* Bagian Kiri: Tombol Sidebar & Logo */}
       <div className="header-left">
-        <button 
-          className="sidebar-toggle-btn" 
+        <button
+          className="sidebar-toggle-btn"
           onClick={onSidebarToggle} // 👈 Gunakan nama prop yang benar
           aria-label="Toggle Sidebar"
         >
@@ -58,15 +66,21 @@ const Header = ({ onSidebarToggle, isSidebarOpen }) => {
             onClick={() => setIsDropdownOpen(!isDropdownOpen)}
           >
             <img
-              src={`https://ui-avatars.com/api/?name=${user?.full_name || "User"}&background=0D8ABC&color=fff`}
+              src={`https://ui-avatars.com/api/?name=${
+                user?.full_name || "User"
+              }&background=0D8ABC&color=fff`}
               alt="Profile"
               className="user-avatar"
             />
             <div className="user-info-text">
               <span className="user-name">{user?.full_name || "Pengguna"}</span>
-              <small className="user-role">{user?.activeRole?.name || "Role"}</small>
+              <small className="user-role">
+                {user?.activeRole?.name || "Role"}
+              </small>
             </div>
-            <FiChevronDown className={`dropdown-arrow ${isDropdownOpen ? 'open' : ''}`} />
+            <FiChevronDown
+              className={`dropdown-arrow ${isDropdownOpen ? "open" : ""}`}
+            />
           </div>
 
           {isDropdownOpen && (
@@ -89,7 +103,7 @@ const Header = ({ onSidebarToggle, isSidebarOpen }) => {
                 <li className="divider"></li>
                 <li>
                   <button onClick={handleLogout} className="logout-btn">
-                    <FiLogOut style={{ color: 'var(--error-color)' }} /> Logout
+                    <FiLogOut style={{ color: "var(--error-color)" }} /> Logout
                   </button>
                 </li>
               </ul>

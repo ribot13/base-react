@@ -5,70 +5,71 @@ import {
   Routes,
   Route,
   Navigate,
+  Outlet, // <--- JANGAN LUPA IMPORT INI
 } from "react-router-dom";
-import { AuthProvider, useAuth } from "./context/AuthContext.jsx";
-import "./config.json";
+import { AuthProvider } from "./context/AuthContext.jsx";
 import { ToastContainer } from "react-toastify"; 
 import "react-toastify/dist/ReactToastify.css"; 
 
+// Components & Pages
 import LoginPage from "./pages/Auth";
 import MainLayout from "./layouts/MainLayout.jsx"; 
-//Dashboard";
 import DashboardPage from "./pages/Dashboard";
-//Pengaturan Sistem
-//Adminisrtasi Menu
 import MenuAdmin from './pages/MenuAdministrasi';
-//Administrasi User
 import UserAdminPage from "./pages/Users";
 import UserFormPage from "./pages/Users/form.jsx";
 
-// Komponen Pembungkus untuk Route Terproteksi
-const PrivateRoute = ({ children }) => {
-  const { isLoggedIn } = useAuth();
-  // Jika tidak login, arahkan ke halaman login
-  return isLoggedIn ? children : <Navigate to="/login" />;
+// Guard
+import ProtectedRoute from "./components/ProtectedRoute.jsx"; 
+
+// ---------------------------------------------------------
+// 1. BUAT WRAPPER LAYOUT
+// Ini triknya: MainLayout menerima <Outlet /> sebagai children
+// sehingga router tahu di mana harus merender halaman aktif.
+// ---------------------------------------------------------
+const LayoutWrapper = () => {
+  return (
+    <MainLayout>
+      <Outlet />
+    </MainLayout>
+  );
 };
 
 const App = () => (
   <AuthProvider>
     <Router>
       <Routes>
-        {/* Rute Login tidak menggunakan Layout */}
+        {/* Rute Public */}
         <Route path="/login" element={<LoginPage />} />
 
-        {/* 🎯 Rute Terproteksi Dibungkus dalam MainLayout */}
-        <Route
-          path="/*" // Menggunakan rute wildcard atau base path untuk rute terproteksi
-          element={
-            <PrivateRoute>
-              <MainLayout>
-                <Routes>
-                  {/* Dashboard */}
-                  <Route path="/dashboard" element={<DashboardPage />} />
+        {/* 🎯 Rute Terproteksi */}
+        <Route element={<ProtectedRoute />}>
+            
+            {/* Gunakan Wrapper yang sudah kita buat di atas */}
+            <Route element={<LayoutWrapper />}>
+                
+                {/* Definisi Halaman */}
+                <Route path="/dashboard" element={<DashboardPage />} />
+                
+                {/* Halaman Admin */}
+                <Route path="/admin/menu" element={<MenuAdmin />} />
+                <Route path="/admin/users" element={<UserAdminPage />} />
+                <Route path="/admin/users/:id" element={<UserFormPage />} />
+                
+                {/* Redirect default */}
+                <Route path="/" element={<Navigate to="/dashboard" />} />
+                
+            </Route>
+        </Route>
 
-                  {/* Administrasi Menu. */}
-                  <Route path="/admin/menu" element={<MenuAdmin />} />
-                  {/* Manajemen User */}
-                  <Route path="/admin/users" element={<UserAdminPage />} />
-                  <Route path="/admin/users/:id" element={<UserFormPage />} />
-                  {/* Redirect default ke Dashboard jika sudah login */}
-                  <Route path="/" element={<Navigate to="/dashboard" />} />
-                </Routes>
-              </MainLayout>
-            </PrivateRoute>
-          }
-        />
+        {/* Fallback 404 */}
+        <Route path="*" element={<Navigate to="/dashboard" />} />
+
       </Routes>
+
       <ToastContainer
         position="top-right"
         autoClose={5000}
-        hideProgressBar={false}
-        newestOnTop={false}
-        closeOnClick
-        rtl={false}
-        pauseOnFocusLoss
-        draggable
-        pauseOnHover
         theme="colored"
       />
     </Router>

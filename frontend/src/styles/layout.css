@@ -18,7 +18,7 @@
     margin-left: var(--sidebar-width-desktop); /* Margin kiri di Desktop */
     padding: 20px;
     min-height: calc(100vh - var(--header-height));
-    background-color: var(--bg-page);
+    background-color: transparent !important;
     transition: margin-left var(--transition-speed);
 }
 

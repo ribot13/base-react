@@ -109,10 +109,7 @@ const UserAdminPage = () => {
   return (
     <div className="admin-page-container">
       {/* --- HEADER --- */}
-      <div className="page-header">
-        <h2 className="page-title">
-          <FiUsers size={24} /> Manajemen Pengguna
-        </h2>
+      <div className="page-header justify-content-end">
         <button
           className="btn btn-primary"
           onClick={handleAdd}

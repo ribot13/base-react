@@ -14,6 +14,10 @@ import '../styles/components/sidebar.css';
 const MenuItemRender = ({ item, openItemId, setOpenItemId }) => {
     const { canAccess } = useAccessControl();
     const location = useLocation();
+    // [LOGIKA BARU] - Sembunyikan item jika show_in_menu = 0 (false)
+    if (item.show_in_menu === 0 || item.show_in_menu === false) {
+        return null;
+    }
     
     // Cek Izin: Jika izin dibutuhkan dan user tidak memiliki, jangan render
     if (item.required_permission && !canAccess(item.required_permission)) {
@@ -47,6 +51,7 @@ const MenuItemRender = ({ item, openItemId, setOpenItemId }) => {
     
     // Tentukan ikon toggler (FiChevronDown/FiChevronRight)
     const TogglerIcon = isOpen ? FeatherIcons.FiChevronDown : FeatherIcons.FiChevronRight;
+
 
 
     // 1. Item yang memiliki Children (Parent Menu)
