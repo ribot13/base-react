@@ -2,7 +2,6 @@
 
 module.exports = (sequelize, DataTypes) => {
     const MenuItem = sequelize.define('MenuItem', {
-        
         // 1. ID (Primary Key) - HILANG DI KODE ANDA SEBELUMNYA
         id: {
             type: DataTypes.INTEGER,
@@ -58,6 +57,11 @@ module.exports = (sequelize, DataTypes) => {
         is_active: {
             type: DataTypes.BOOLEAN,
             allowNull: false,
+            defaultValue: true,
+        },
+        // 9. show_in_menu
+        show_in_menu: {
+            type: DataTypes.BOOLEAN,
             defaultValue: true,
         },
         
