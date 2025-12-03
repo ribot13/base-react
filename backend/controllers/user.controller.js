@@ -65,6 +65,20 @@ exports.findAll = async (req, res) => {
     }
 };
 
+exports.findOne = async (req, res) => {
+    const id = req.params.id;
+    try {
+        const user = await User.findByPk(id, {
+            attributes: { exclude: ['password'] },
+            include: [{ model: Role, attributes: ['id', 'name'], through: { attributes: [] } }]
+        });
+        if (!user) return res.status(404).json({ message: "Pengguna tidak ditemukan." });
+        res.status(200).json(user);
+    } catch (error) {
+        res.status(500).json({ message: "Gagal mengambil data pengguna." });
+    }
+};
+
 
 // ----------------------------------------------------
 // 2. CREATE NEW USER (create)

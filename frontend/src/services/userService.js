@@ -17,7 +17,7 @@ const handleResponse = async (response) => {
  * Mengambil daftar semua pengguna
  */
 export const fetchUsers = async (token) => {
-    const response = await fetch(`${API_BASE_URL}/users`, {
+    const response = await fetch(`${API_BASE_URL}/admin/users`, {
         headers: {
             'Authorization': `Bearer ${token}`,
             'Content-Type': 'application/json',
@@ -68,7 +68,7 @@ export const fetchRoles = async (token) => {
  * Membuat pengguna baru
  */
 export const createUser = async (token, userData) => {
-    const response = await fetch(`${API_BASE_URL}/users`, {
+    const response = await fetch(`${API_BASE_URL}/admin/users`, {
         method: 'POST',
         headers: {
             'Authorization': `Bearer ${token}`,
@@ -83,7 +83,7 @@ export const createUser = async (token, userData) => {
  * Memperbarui pengguna yang sudah ada
  */
 export const updateUser = async (token, userId, userData) => {
-    const response = await fetch(`${API_BASE_URL}/users/${userId}`, {
+    const response = await fetch(`${API_BASE_URL}/admin/users/${userId}`, {
         method: 'PUT',
         headers: {
             'Authorization': `Bearer ${token}`,
@@ -98,7 +98,7 @@ export const updateUser = async (token, userId, userData) => {
  * Menghapus pengguna
  */
 export const deleteUser = async (token, userId) => {
-    const response = await fetch(`${API_BASE_URL}/users/${userId}`, {
+    const response = await fetch(`${API_BASE_URL}/admin/users/${userId}`, {
         method: 'DELETE',
         headers: {
             'Authorization': `Bearer ${token}`,

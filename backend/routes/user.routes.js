@@ -15,6 +15,8 @@ const permission = 'manage-users';
 // 1. GET - Ambil semua User (Read All)
 router.get('/', [verifyToken, fetchPermissions, hasPermission(permission)], userController.findAll);
 
+router.get('/:id', [verifyToken, fetchPermissions, hasPermission(permission)], userController.findOne);
+
 // 2. POST - Buat User Baru (Create)
 router.post('/', [verifyToken, fetchPermissions, hasPermission(permission)], userController.create);
 

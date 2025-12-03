@@ -84,7 +84,7 @@ const Header = ({ onSidebarToggle, isSidebarOpen }) => {
           </div>
 
           {isDropdownOpen && (
-            <div className="dropdown-menu">
+            <div className="user-dropdown-menu"> 
               <div className="dropdown-header">
                 <strong>{user?.full_name}</strong>
                 <span>@{user?.username}</span>
@@ -103,7 +103,7 @@ const Header = ({ onSidebarToggle, isSidebarOpen }) => {
                 <li className="divider"></li>
                 <li>
                   <button onClick={handleLogout} className="logout-btn">
-                    <FiLogOut style={{ color: "var(--error-color)" }} /> Logout
+                    <FiLogOut style={{ color: 'var(--error-color)' }} /> Logout
                   </button>
                 </li>
               </ul>

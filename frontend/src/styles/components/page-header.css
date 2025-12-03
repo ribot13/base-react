@@ -1,9 +1,9 @@
 /* src/styles/components/page-header.css */
 
 .page-header-container {
-    margin-bottom: 24px;
+    /*margin-bottom: 24px;
     padding-bottom: 20px; /* Jarak antara teks ke garis */
-    border-bottom: 1px solid #e2e8f0; /* Garis Pembatas (Divider) */
+    /*border-bottom: 1px solid #e2e8f0; /* Garis Pembatas (Divider) */
     display: flex;
     flex-direction: column;
     gap: 4px;

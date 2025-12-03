@@ -13,7 +13,7 @@ module.exports = (app) => {
     const routes = [
         ['/api/auth', authRoutes],
         ['/api/menu', menuRoutes],
-        ['/api/users', userRoutes],
+        ['/api/admin/users', userRoutes],
         ['/api/roles', roleRoutes],
     ];
 

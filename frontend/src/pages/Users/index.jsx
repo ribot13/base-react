@@ -1,8 +1,8 @@
- 
+// src/pages/Users/index.jsx
 /* eslint-disable react-hooks/exhaustive-deps */
 import React, { useState, useEffect, useCallback } from "react"; 
 import { useNavigate } from "react-router-dom";
-import { FiUsers, FiEdit, FiTrash2, FiPlus, FiLoader, FiRefreshCw, FiUserCheck, FiUserX } from "react-icons/fi";
+import { FiEdit, FiTrash2, FiPlus, FiLoader, FiRefreshCw } from "react-icons/fi";
 import { toast } from "react-toastify";
 import { useAuth } from "../../context/AuthContext";
 import { useAccessControl } from "../../hooks/useAccessControl";
@@ -24,9 +24,7 @@ const UserAdminPage = () => {
   const REQUIRED_PERMISSION = "manage-users";
   const canManageUsers = canAccess(REQUIRED_PERMISSION);
 
-  // ----------------------------------------------------
   // 2. DATA FETCHING
-  // ----------------------------------------------------
   const loadData = useCallback(async () => {
     setLoading(true);
     try {
@@ -54,19 +52,20 @@ const UserAdminPage = () => {
     }
   }, [loadData, canManageUsers, token]);
 
-  // ----------------------------------------------------
-  // 3. HANDLER CRUD
-  // ----------------------------------------------------
+  // 3. TITLE BROWSER OTOMATIS
+  useEffect(() => {
+    document.title = "Manajemen Pengguna | MRW ERP";
+  }, []);
 
+  // 4. HANDLER CRUD
   const handleAdd = () => {
-    navigate("/admin/users/new");
+    navigate("/admin/users/new"); // Pastikan route ini sesuai dengan App.jsx Anda
   };
 
   const handleEdit = (user) => {
     navigate(`/admin/users/${user.id}`);
   };
 
-  // Logic Hapus User
   const handleDelete = async (targetUser) => {
     if (window.confirm(`Apakah Anda yakin ingin menghapus user "${targetUser.username}"?`)) {
       try {
@@ -79,136 +78,161 @@ const UserAdminPage = () => {
     }
   };
 
-  // ----------------------------------------------------
-  // 4. LOGIKA LEVEL ROLE (Frontend Check)
-  // ----------------------------------------------------
+  // 5. LOGIKA VALIDASI DELETE
   const isDeleteDisabled = (targetUser) => {
-    // 1. Constraint: Tidak bisa hapus diri sendiri
+    // Tidak bisa hapus diri sendiri
     if (targetUser.id === loggedInUserId) return true;
-    // 2. Constraint: Level Penghapus HARUS lebih tinggi dari Level Target
+    // Level Penghapus HARUS lebih tinggi dari Level Target
     if (loggedInUserLevel <= targetUser.highestRoleLevel) return true;
-    
     return false;
   };
 
   if (!canManageUsers && !loading) {
     return (
-      <div className="admin-page-container">
-        <div className="card-panel" style={{ textAlign: 'center', color: 'var(--error-color)' }}>
-            <h3>Akses Ditolak</h3>
-            <p>Anda tidak memiliki izin untuk mengelola pengguna.</p>
+      <div className="container-fluid p-0">
+         <div className="card-panel text-center py-5">
+            <h3 className="text-danger">Akses Ditolak</h3>
+            <p className="text-muted">Anda tidak memiliki izin untuk mengelola pengguna.</p>
         </div>
       </div>
     );
   }
 
-  // ----------------------------------------------------
-  // 5. RENDER UTAMA
-  // ----------------------------------------------------
-
+  // 6. RENDER UTAMA
   return (
-    <div className="admin-page-container">
-      {/* --- HEADER --- */}
-      <div className="page-header justify-content-end">
-        <button
-          className="btn btn-primary"
-          onClick={handleAdd}
-          disabled={!canManageUsers}
-        >
-          <FiPlus size={18} /> Tambah Pengguna
-        </button>
-      </div>
-
-      {/* --- CONTENT CARD --- */}
+    <div className="container-fluid p-0">
       <div className="card-panel">
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
-             <h3 style={{ margin: 0, fontSize: '1.1rem' }}>Daftar Pengguna ({users.length})</h3>
-             <button className="btn btn-secondary btn-icon-sm" onClick={loadData} title="Refresh Data">
-                <FiRefreshCw />
-             </button>
+        
+        {/* --- A. HEADER TOMBOL TAMBAH (KANAN) --- */}
+        <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', marginBottom: '20px' }}>
+            <button
+            className="btn btn-primary btn-sm"
+            onClick={handleAdd}
+            disabled={!canManageUsers}
+            >
+            <FiPlus className="me-2" /> Tambah Pengguna
+            </button>
         </div>
 
-        {loading ? (
-          <div style={{ textAlign: 'center', padding: '40px', color: 'var(--text-muted)' }}>
-            <FiLoader className="spin-animation" size={30} />
-            <p style={{ marginTop: '10px' }}>Memuat data pengguna...</p>
-          </div>
-        ) : (
-          <div className="table-responsive">
-            <table className="data-table">
-              <thead>
-                <tr>
-                  <th width="5%">ID</th>
-                  <th>Nama Lengkap</th>
-                  <th>Username</th>
-                  <th>Email</th>
-                  <th>Roles</th>
-                  <th style={{ textAlign: 'center' }}>Status</th>
-                  <th style={{ textAlign: 'center' }}>Aksi</th>
-                </tr>
-              </thead>
-              <tbody>
-                {users.length > 0 ? (
-                    users.map((u) => (
-                    <tr key={u.id}>
-                        <td>{u.id}</td>
-                        <td style={{ fontWeight: 500 }}>{u.full_name}</td>
-                        <td style={{ color: 'var(--text-muted)' }}>@{u.username}</td>
-                        <td>{u.email || "-"}</td>
-                        <td>
-                        {u.Roles && u.Roles.length > 0 ? (
-                            u.Roles.map((r, idx) => (
-                                <span key={idx} className="badge badge-neutral" style={{ marginRight: '5px' }}>
-                                    {r.name}
+        {/* --- B. SUB-HEADER (TOTAL & REFRESH) --- */}
+        <div style={{ 
+            display: 'flex', 
+            justifyContent: 'space-between', 
+            alignItems: 'center', 
+            marginBottom: '15px',
+            paddingBottom: '15px',
+            borderBottom: '1px solid #e9ecef'
+        }}>
+            <div style={{ fontSize: '1.1rem', fontWeight: 600, color: '#333' }}>
+                Total Pengguna: <span style={{ color: '#2563eb' }}>{users.length}</span>
+            </div>
+            
+            <button 
+                className="btn btn-sm btn-outline-primary" 
+                onClick={loadData} 
+                title="Refresh Data"
+                style={{ display: 'flex', alignItems: 'center', gap: '5px' }}
+            >
+                <FiRefreshCw /> Refresh
+            </button>
+        </div>
+
+        {/* --- C. TABEL DATA --- */}
+        <div className="table-responsive">
+            {loading ? (
+                <div className="text-center py-5">
+                    <FiLoader className="spin-animation mb-2" size={30} color="#2563eb" />
+                    <p className="text-muted">Memuat data pengguna...</p>
+                </div>
+            ) : (
+                <table className="data-table" style={{ width: '100%', borderCollapse: 'collapse' }}>
+                    <thead>
+                        <tr style={{ background: '#f8f9fa', borderBottom: '2px solid #e9ecef' }}>
+                        <th style={{ padding: '12px', textAlign: 'left' }}>ID</th>
+                        <th style={{ padding: '12px', textAlign: 'left' }}>Nama Lengkap</th>
+                        <th style={{ padding: '12px', textAlign: 'left' }}>Username</th>
+                        <th style={{ padding: '12px', textAlign: 'left' }}>Roles</th>
+                        <th style={{ padding: '12px', textAlign: 'center' }}>Status</th>
+                        <th style={{ padding: '12px', textAlign: 'center' }}>Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {users.length > 0 ? (
+                            users.map((u) => (
+                            <tr key={u.id} style={{ borderBottom: '1px solid #f0f0f0' }}>
+                                <td style={{ padding: '12px', color: '#666' }}>#{u.id}</td>
+                                <td style={{ padding: '12px', fontWeight: 600, color: '#1f2937' }}>{u.full_name}</td>
+                                <td style={{ padding: '12px' }}>
+                                    <span style={{ background: '#f3f4f6', padding: '2px 8px', borderRadius: '4px', fontFamily: 'monospace', color: '#4b5563' }}>
+                                        @{u.username}
+                                    </span>
+                                </td>
+                                <td style={{ padding: '12px' }}>
+                                {u.Roles && u.Roles.length > 0 ? (
+                                    <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap' }}>
+                                        {u.Roles.map((r, idx) => (
+                                            <span key={idx} style={{ fontSize: '11px', background: '#e0e7ff', color: '#3730a3', padding: '2px 8px', borderRadius: '10px', border: '1px solid #c7d2fe' }}>
+                                                {r.name}
+                                            </span>
+                                        ))}
+                                    </div>
+                                ) : (
+                                    <span style={{ fontStyle: 'italic', color: '#9ca3af' }}>-</span>
+                                )}
+                                </td>
+                                <td style={{ padding: '12px', textAlign: 'center' }}>
+                                <span style={{ 
+                                    padding: '4px 10px', borderRadius: '20px', fontSize: '12px', fontWeight: 600,
+                                    background: u.is_active ? '#dcfce7' : '#fee2e2',
+                                    color: u.is_active ? '#166534' : '#991b1b'
+                                }}>
+                                    {u.is_active ? "Aktif" : "Nonaktif"}
                                 </span>
+                                </td>
+                                <td style={{ padding: '12px', textAlign: 'center' }}>
+                                <div style={{ display: 'flex', justifyContent: 'center', gap: '8px' }}>
+                                    <button
+                                        className="btn-icon-sm"
+                                        style={{ background: 'white', border: '1px solid #d1d5db', padding: '6px', borderRadius: '4px', cursor: 'pointer', color: '#4b5563' }}
+                                        onClick={() => handleEdit(u)}
+                                        disabled={!canManageUsers}
+                                        title="Edit Pengguna"
+                                    >
+                                    <FiEdit size={16} />
+                                    </button>
+
+                                    <button
+                                        className="btn-icon-sm"
+                                        style={{ 
+                                            background: 'white', 
+                                            border: '1px solid #d1d5db', 
+                                            padding: '6px', 
+                                            borderRadius: '4px', 
+                                            cursor: isDeleteDisabled(u) ? 'not-allowed' : 'pointer', 
+                                            color: isDeleteDisabled(u) ? '#9ca3af' : '#ef4444',
+                                            opacity: isDeleteDisabled(u) ? 0.6 : 1
+                                        }}
+                                        onClick={() => handleDelete(u)}
+                                        disabled={isDeleteDisabled(u) || !canManageUsers}
+                                        title={isDeleteDisabled(u) ? "Akses Dibatasi" : "Hapus Pengguna"}
+                                    >
+                                    <FiTrash2 size={16} />
+                                    </button>
+                                </div>
+                                </td>
+                            </tr>
                             ))
                         ) : (
-                            <span style={{ color: 'var(--text-muted)', fontStyle: 'italic' }}>No Role</span>
+                            <tr>
+                                <td colSpan="6" style={{ textAlign: 'center', padding: '40px', color: '#6b7280' }}>
+                                    Tidak ada data pengguna yang ditemukan.
+                                </td>
+                            </tr>
                         )}
-                        </td>
-                        <td style={{ textAlign: 'center' }}>
-                        <span className={`badge ${u.is_active ? "badge-success" : "badge-danger"}`}>
-                            {u.is_active ? "Aktif" : "Nonaktif"}
-                        </span>
-                        </td>
-                        <td style={{ textAlign: 'center' }}>
-                        <div style={{ display: 'flex', justifyContent: 'center', gap: '6px' }}>
-                            <button
-                                className="btn btn-secondary btn-icon-sm"
-                                onClick={() => handleEdit(u)}
-                                disabled={!canManageUsers}
-                                title="Edit Pengguna"
-                            >
-                            <FiEdit size={16} />
-                            </button>
-
-                            <button
-                                className="btn btn-danger btn-icon-sm"
-                                onClick={() => handleDelete(u)}
-                                disabled={isDeleteDisabled(u) || !canManageUsers}
-                                title={
-                                    isDeleteDisabled(u)
-                                    ? "Tidak dapat menghapus (Level setara/lebih tinggi atau akun sendiri)"
-                                    : "Hapus Pengguna"
-                                }
-                            >
-                            <FiTrash2 size={16} />
-                            </button>
-                        </div>
-                        </td>
-                    </tr>
-                    ))
-                ) : (
-                    <tr>
-                        <td colSpan="7" style={{ textAlign: 'center', padding: '30px' }}>
-                            Tidak ada data pengguna.
-                        </td>
-                    </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
-        )}
+                    </tbody>
+                </table>
+            )}
+        </div>
       </div>
     </div>
   );

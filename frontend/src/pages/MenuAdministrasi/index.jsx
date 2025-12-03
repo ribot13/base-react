@@ -1,9 +1,8 @@
+// src/pages/MenuAdministrasi/index.jsx
 /* eslint-disable no-unused-vars */
-// src/pages/MenuAdmin.jsx
 import { APP_CONFIG } from '../../config/appConfig';
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-// 👇 1. IMPORT SEMUA ICON DARI FI AGAR BISA DIPANGGIL DINAMIS
 import * as FiIcons from 'react-icons/fi'; 
 
 const API_URL = `${APP_CONFIG.API_BASE_URL}/menu`;
@@ -26,20 +25,13 @@ const MenuAdmin = () => {
     };
     const [formData, setFormData] = useState(initialFormState);
 
-    // --- HELPER: RENDER ICON DARI STRING ---
-    // Fungsi ini mengubah string "FiHome" menjadi komponen <FiHome />
+    // --- HELPER: RENDER ICON ---
     const renderIcon = (iconName) => {
-        // Ambil komponen dari library FiIcons berdasarkan namanya
         const IconComponent = FiIcons[iconName];
-        
-        // Jika ditemukan, render. Jika tidak, pakai default FiCircle
-        if (IconComponent) {
-            return <IconComponent size={18} />;
-        }
+        if (IconComponent) return <IconComponent size={18} />;
         return <FiIcons.FiCircle size={18} />;
     };
 
-    // --- FETCH DATA ---
     const fetchMenus = async () => {
         setIsLoading(true);
         try {
@@ -50,7 +42,6 @@ const MenuAdmin = () => {
             setError(null);
         } catch (err) {
             setError('Gagal mengambil data menu.');
-            console.error(err);
         } finally {
             setIsLoading(false);
         }
@@ -72,7 +63,6 @@ const MenuAdmin = () => {
         e.preventDefault();
         try {
             const token = localStorage.getItem('token');
-            // Validasi sederhana: Cek apakah icon valid
             if (!FiIcons[formData.icon_name]) {
                 alert(`Nama icon "${formData.icon_name}" tidak ditemukan di library Feather Icons (Fi)!`);
                 return;
@@ -112,208 +102,264 @@ const MenuAdmin = () => {
     const handleEdit = (item) => {
         setFormData(item);
         setShowForm(true);
+        // Scroll ke atas agar user sadar form terbuka
         window.scrollTo({ top: 0, behavior: 'smooth' });
     };
 
     const parentOptions = menuItems.filter(item => !item.path && item.parent_id === null);
 
     return (
-        <div className="admin-page-container">
-            {/* --- HEADER --- */}
-            <div className="page-header">
-                <button 
-                    className={`btn ${showForm ? 'btn-secondary' : 'btn-primary'}`} 
-                    onClick={() => {
-                        setShowForm(!showForm);
-                        if(showForm) setFormData(initialFormState);
-                    }}
-                >
-                    {showForm ? <><FiIcons.FiX /> Tutup Form</> : <><FiIcons.FiPlus /> Tambah Menu</>}
-                </button>
-            </div>
-
-            {error && (
-                <div className="card-panel" style={{ borderLeft: '4px solid var(--error-color)', padding: '15px' }}>
-                    <p style={{ color: 'var(--error-color)', margin: 0 }}>{error}</p>
-                </div>
-            )}
-
-            {/* --- FORM --- */}
-            {showForm && (
-                <div className="card-panel">
-                    <h3 style={{ marginTop: 0, marginBottom: '20px', fontSize: '1.2rem' }}>
-                        {formData.id ? `Edit Menu` : 'Buat Item Menu Baru'}
-                    </h3>
-                    
-                    <form onSubmit={handleSubmit}>
-                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
-                            {/* Kolom Kiri */}
-                            <div>
-                                <div className="form-group">
-                                    <label className="form-label">Judul Label</label>
-                                    <input 
-                                        type="text" className="form-control" name="title" 
-                                        value={formData.title} onChange={handleChange} required 
-                                        placeholder="Contoh: Dashboard"
-                                    />
-                                </div>
-                                <div className="form-group">
-                                    <label className="form-label">Path URL</label>
-                                    <input 
-                                        type="text" className="form-control" name="path" 
-                                        value={formData.path || ''} onChange={handleChange} 
-                                        placeholder="/dashboard (Kosongkan jika Folder)" 
-                                    />
-                                </div>
-                                <div className="form-group">
-                                    <label className="form-label">
-                                        Icon Name (Preview: {renderIcon(formData.icon_name)})
-                                    </label>
-                                    <input 
-                                        type="text" className="form-control" name="icon_name" 
-                                        value={formData.icon_name} onChange={handleChange} 
-                                        placeholder="Contoh: FiUser"
-                                    />
-                                    <small style={{color: 'var(--text-muted)'}}>
-                                        Gunakan nama dari library Feather Icons (react-icons/fi).
-                                    </small>
-                                </div>
-                            </div>
-
-                            {/* Kolom Kanan */}
-                            <div>
-                                <div className="form-group">
-                                    <label className="form-label">Izin Diperlukan</label>
-                                    <input 
-                                        type="text" className="form-control" name="required_permission" 
-                                        value={formData.required_permission || ''} onChange={handleChange} 
-                                        placeholder="Contoh: view-users" 
-                                    />
-                                </div>
-                                <div className="form-group">
-                                    <label className="form-label">Parent Menu</label>
-                                    <select 
-                                        className="form-control" name="parent_id" 
-                                        value={formData.parent_id || ''} onChange={handleChange}
-                                    >
-                                        <option value="">-- Root (Menu Utama) --</option>
-                                        {parentOptions.map(item => (
-                                            <option key={item.id} value={item.id}>{item.title}</option>
-                                        ))}
-                                    </select>
-                                </div>
-                                <div className="form-group" style={{ display: 'flex', gap: '20px', alignItems: 'center', marginTop: '30px' }}>
-                                    <div>
-                                        <label className="form-label">Urutan</label>
-                                        <input 
-                                            type="number" className="form-control" style={{ width: '80px' }}
-                                            name="order_index" value={formData.order_index} onChange={handleChange} 
-                                        />
-                                    </div>
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                                        <input 
-                                            type="checkbox" id="chkActive" name="is_active" 
-                                            checked={formData.is_active} onChange={handleChange} 
-                                            style={{ width: '18px', height: '18px' }}
-                                        />
-                                        <label htmlFor="chkActive" style={{ cursor: 'pointer' }}>Aktifkan?</label>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div style={{ marginTop: '20px', display: 'flex', gap: '10px' }}>
-                            <button type="submit" className="btn btn-primary">
-                                <FiIcons.FiSave /> Simpan
-                            </button>
-                            <button 
-                                type="button" className="btn btn-secondary" 
-                                onClick={() => { setFormData(initialFormState); setShowForm(false); }}
-                            >
-                                Batal
-                            </button>
-                        </div>
-                    </form>
-                </div>
-            )}
-
-            {/* --- TABLE --- */}
+        <div className="container-fluid p-0">
             <div className="card-panel">
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
-                    <h3 style={{ margin: 0, fontSize: '1.1rem' }}>Daftar Menu ({menuItems.length})</h3>
-                    <button className="btn btn-secondary btn-icon-sm" onClick={fetchMenus} title="Refresh Data">
-                        <FiIcons.FiRefreshCw />
+                
+                {/* --- 1. HEADER UTAMA & TOMBOL TAMBAH --- */}
+                <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', marginBottom: '20px' }}>
+                    <button 
+                        className={`btn ${showForm ? 'btn-secondary' : 'btn-primary'} btn-sm`} 
+                        onClick={() => {
+                            setShowForm(!showForm);
+                            if(showForm) setFormData(initialFormState);
+                        }}
+                    >
+                        {showForm ? (
+                            <><FiIcons.FiX className="me-2" /> Tutup Form</>
+                        ) : (
+                            <><FiIcons.FiPlus className="me-2" /> Tambah Menu</>
+                        )}
                     </button>
                 </div>
 
-                {isLoading ? (
-                    <p>Memuat data...</p>
-                ) : (
-                    <div className="table-responsive">
-                        <table className="data-table">
-                            <thead>
+                {error && (
+                    <div className="alert alert-danger" style={{ marginBottom: '20px' }}>
+                        {error}
+                    </div>
+                )}
+
+                {/* --- 2. FORM INPUT --- */}
+                {showForm && (
+                    <div style={{ background: '#f8f9fa', padding: '20px', borderRadius: '8px', marginBottom: '25px', border: '1px solid #e9ecef' }}>
+                        <h4 style={{ marginTop: 0, marginBottom: '20px', color: '#333' }}>
+                            {formData.id ? `Edit Menu` : 'Buat Menu Baru'}
+                        </h4>
+                        
+                        <form onSubmit={handleSubmit}>
+                            <div className="row">
+                                <div className="col-md-6" style={{ marginBottom: '15px' }}>
+                                    <div className="form-group mb-3">
+                                        <label className="form-label fw-bold">Judul Label</label>
+                                        <input 
+                                            type="text" className="form-control" name="title" 
+                                            value={formData.title} onChange={handleChange} required 
+                                            placeholder="Contoh: Dashboard"
+                                            style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ced4da' }}
+                                        />
+                                    </div>
+                                    <div className="form-group mb-3">
+                                        <label className="form-label fw-bold">Path URL</label>
+                                        <input 
+                                            type="text" className="form-control" name="path" 
+                                            value={formData.path || ''} onChange={handleChange} 
+                                            placeholder="/dashboard (Kosongkan jika Folder)" 
+                                            style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ced4da' }}
+                                        />
+                                    </div>
+                                    <div className="form-group mb-3">
+                                        <label className="form-label fw-bold">Icon Name</label>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                            <input 
+                                                type="text" className="form-control" name="icon_name" 
+                                                value={formData.icon_name} onChange={handleChange} 
+                                                placeholder="Contoh: FiUser"
+                                                style={{ flex: 1, padding: '8px', borderRadius: '4px', border: '1px solid #ced4da' }}
+                                            />
+                                            <span style={{ padding: '8px', background: 'white', border: '1px solid #ced4da', borderRadius: '4px' }}>
+                                                {renderIcon(formData.icon_name)}
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div className="col-md-6">
+                                    <div className="form-group mb-3">
+                                        <label className="form-label fw-bold">Izin Akses (Permission)</label>
+                                        <input 
+                                            type="text" className="form-control" name="required_permission" 
+                                            value={formData.required_permission || ''} onChange={handleChange} 
+                                            placeholder="Contoh: view-users" 
+                                            style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ced4da' }}
+                                        />
+                                    </div>
+                                    <div className="form-group mb-3">
+                                        <label className="form-label fw-bold">Parent Menu</label>
+                                        <select 
+                                            className="form-control" name="parent_id" 
+                                            value={formData.parent_id || ''} onChange={handleChange}
+                                            style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ced4da' }}
+                                        >
+                                            <option value="">-- Root (Menu Utama) --</option>
+                                            {parentOptions.map(item => (
+                                                <option key={item.id} value={item.id}>{item.title}</option>
+                                            ))}
+                                        </select>
+                                    </div>
+                                    
+                                    <div style={{ display: 'flex', gap: '20px', marginTop: '15px' }}>
+                                        <div>
+                                            <label className="form-label fw-bold d-block">Urutan</label>
+                                            <input 
+                                                type="number" className="form-control" style={{ width: '80px', padding: '8px', borderRadius: '4px', border: '1px solid #ced4da' }}
+                                                name="order_index" value={formData.order_index} onChange={handleChange} 
+                                            />
+                                        </div>
+                                        <div style={{ display: 'flex', alignItems: 'center', paddingTop: '30px' }}>
+                                            <label style={{ display: 'flex', alignItems: 'center', cursor: 'pointer', gap: '8px' }}>
+                                                <input 
+                                                    type="checkbox" name="is_active" 
+                                                    checked={formData.is_active} onChange={handleChange} 
+                                                    style={{ width: '18px', height: '18px' }}
+                                                />
+                                                <span className="fw-bold">Aktifkan?</span>
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div style={{ marginTop: '20px', display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
+                                <button 
+                                    type="button" className="btn btn-secondary" 
+                                    onClick={() => { setFormData(initialFormState); setShowForm(false); }}
+                                >
+                                    Batal
+                                </button>
+                                <button type="submit" className="btn btn-primary">
+                                    <FiIcons.FiSave className="me-2" /> Simpan
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                )}
+
+                {/* --- 3. SUB-HEADER (TOTAL & REFRESH) --- */}
+                {/* Kita pindahkan ini KELUAR dari table-responsive agar tidak terpotong & styles lebih jelas */}
+                <div style={{ 
+                    display: 'flex', 
+                    justifyContent: 'space-between', 
+                    alignItems: 'center', 
+                    marginBottom: '15px',
+                    paddingBottom: '15px',
+                    borderBottom: '1px solid #e9ecef'
+                }}>
+                    <div style={{ fontSize: '1.1rem', fontWeight: 600, color: '#333' }}>
+                        Total Menu: <span style={{ color: '#2563eb' }}>{menuItems.length}</span>
+                    </div>
+                    
+                    <button 
+                        onClick={fetchMenus} 
+                        className="btn btn-sm btn-outline-primary"
+                        style={{ display: 'flex', alignItems: 'center', gap: '5px' }}
+                        title="Refresh Data"
+                    >
+                        <FiIcons.FiRefreshCw /> Refresh
+                    </button>
+                </div>
+
+                {/* --- 4. TABEL DATA --- */}
+                <div className="table-responsive">
+                    <table className="data-table" style={{ width: '100%', borderCollapse: 'collapse' }}>
+                        <thead>
+                            <tr style={{ background: '#f8f9fa', borderBottom: '2px solid #e9ecef' }}>
+                                <th style={{ padding: '12px', textAlign: 'left' }}>Label</th>
+                                <th style={{ padding: '12px', textAlign: 'left' }}>Path</th>
+                                <th style={{ padding: '12px', textAlign: 'left' }}>Permission</th>
+                                <th style={{ padding: '12px', textAlign: 'center' }}>Urutan</th>
+                                <th style={{ padding: '12px', textAlign: 'center' }}>Status</th>
+                                <th style={{ padding: '12px', textAlign: 'center' }}>Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {isLoading ? (
                                 <tr>
-                                    <th width="5%">#</th>
-                                    <th width="25%">Label & Icon</th>
-                                    <th>Path / URL</th>
-                                    <th>Izin Akses</th>
-                                    <th>Parent ID</th>
-                                    <th width="10%" style={{ textAlign: 'center' }}>Urutan</th>
-                                    <th width="10%" style={{ textAlign: 'center' }}>Status</th>
-                                    <th width="10%" style={{ textAlign: 'center' }}>Aksi</th>
+                                    <td colSpan="6" className="text-center py-5">
+                                        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '10px' }}>
+                                            <FiIcons.FiLoader className="spin" /> Memuat data...
+                                        </div>
+                                    </td>
                                 </tr>
-                            </thead>
-                            <tbody>
-                                {menuItems.map((item, index) => (
-                                    <tr key={item.id}>
-                                        <td>{index + 1}</td>
-                                        {/* 👇 DISINI KITA RENDER ICON SECARA VISUAL */}
-                                        <td style={{ fontWeight: 500 }}>
-                                            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                            ) : menuItems.length > 0 ? (
+                                menuItems.map((item) => (
+                                    <tr key={item.id} style={{ borderBottom: '1px solid #f0f0f0' }}>
+                                        <td style={{ padding: '12px' }}>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                                                 <div style={{ 
-                                                    color: 'var(--primary-color)', 
-                                                    display: 'flex', alignItems: 'center', 
-                                                    background: '#f0f4ff', padding: '6px', borderRadius: '6px' 
+                                                    width: '32px', height: '32px', background: '#e0e7ff', 
+                                                    borderRadius: '6px', display: 'flex', alignItems: 'center', 
+                                                    justifyContent: 'center', color: '#3730a3' 
                                                 }}>
                                                     {renderIcon(item.icon_name)}
                                                 </div>
                                                 <div>
-                                                    <div>{item.title}</div>
-                                                    <small style={{ color: 'var(--text-muted)', fontSize: '0.75rem' }}>{item.icon_name}</small>
+                                                    <div style={{ fontWeight: 600, color: '#1f2937' }}>{item.title}</div>
+                                                    <small style={{ color: '#6b7280', fontSize: '0.85em' }}>{item.icon_name}</small>
                                                 </div>
                                             </div>
                                         </td>
-                                        <td style={{ color: item.path ? 'inherit' : 'var(--text-muted)', fontStyle: item.path ? 'normal' : 'italic' }}>
-                                            {item.path || 'Folder Group'}
+                                        <td style={{ padding: '12px' }}>
+                                            {item.path ? (
+                                                <code style={{ background: '#f3f4f6', padding: '2px 6px', borderRadius: '4px', color: '#d63384' }}>
+                                                    {item.path}
+                                                </code>
+                                            ) : (
+                                                <span style={{ fontStyle: 'italic', color: '#9ca3af' }}>Folder Group</span>
+                                            )}
                                         </td>
-                                        <td>
-                                            {item.required_permission ? (
-                                                <span className="badge badge-neutral">{item.required_permission}</span>
-                                            ) : '-'}
+                                        <td style={{ padding: '12px' }}>
+                                            {item.required_permission && (
+                                                <span style={{ fontSize: '11px', background: '#fffbeb', color: '#b45309', padding: '4px 8px', borderRadius: '12px', border: '1px solid #fcd34d' }}>
+                                                    {item.required_permission}
+                                                </span>
+                                            )}
                                         </td>
-                                        <td>{item.parent_id || '-'}</td>
-                                        <td style={{ textAlign: 'center' }}>{item.order_index}</td>
-                                        <td style={{ textAlign: 'center' }}>
-                                            <span className={`badge ${item.is_active ? 'badge-success' : 'badge-danger'}`}>
+                                        <td style={{ padding: '12px', textAlign: 'center' }}>{item.order_index}</td>
+                                        <td style={{ padding: '12px', textAlign: 'center' }}>
+                                            <span style={{ 
+                                                padding: '4px 10px', borderRadius: '20px', fontSize: '12px', fontWeight: 600,
+                                                background: item.is_active ? '#dcfce7' : '#fee2e2',
+                                                color: item.is_active ? '#166534' : '#991b1b'
+                                            }}>
                                                 {item.is_active ? 'Aktif' : 'Nonaktif'}
                                             </span>
                                         </td>
-                                        <td style={{ textAlign: 'center' }}>
-                                            <div style={{ display: 'flex', justifyContent: 'center', gap: '5px' }}>
-                                                <button className="btn btn-secondary btn-icon-sm" onClick={() => handleEdit(item)} title="Edit">
-                                                    <FiIcons.FiEdit />
+                                        <td style={{ padding: '12px', textAlign: 'center' }}>
+                                            <div style={{ display: 'flex', justifyContent: 'center', gap: '8px' }}>
+                                                <button 
+                                                    className="btn-icon-sm" onClick={() => handleEdit(item)} 
+                                                    style={{ background: 'white', border: '1px solid #d1d5db', padding: '6px', borderRadius: '4px', cursor: 'pointer', color: '#4b5563' }}
+                                                    title="Edit"
+                                                >
+                                                    <FiIcons.FiEdit size={16} />
                                                 </button>
-                                                <button className="btn btn-danger btn-icon-sm" onClick={() => handleDelete(item.id)} title="Hapus">
-                                                    <FiIcons.FiTrash2 />
+                                                <button 
+                                                    className="btn-icon-sm" onClick={() => handleDelete(item.id)}
+                                                    style={{ background: 'white', border: '1px solid #d1d5db', padding: '6px', borderRadius: '4px', cursor: 'pointer', color: '#ef4444' }} 
+                                                    title="Hapus"
+                                                >
+                                                    <FiIcons.FiTrash2 size={16} />
                                                 </button>
                                             </div>
                                         </td>
                                     </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                    </div>
-                )}
+                                ))
+                            ) : (
+                                <tr>
+                                    <td colSpan="6" style={{ padding: '30px', textAlign: 'center', color: '#6b7280' }}>
+                                        Belum ada data menu. Silakan tambah menu baru.
+                                    </td>
+                                </tr>
+                            )}
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
     );
