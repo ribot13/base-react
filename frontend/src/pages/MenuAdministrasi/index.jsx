@@ -92,24 +92,26 @@ const MenuAdmin = () => {
     // --- HANDLER SUBMIT BARU ---
     const handleSubmit = async (e) => {
         e.preventDefault();
-        try {
-            const token = localStorage.getItem('token');
-            // Validasi sederhana: Cek apakah icon valid
-            if (!FiIcons[formData.icon_name]) {
-                alert(`Nama icon "${formData.icon_name}" tidak ditemukan di library Feather Icons (Fi)!`);
-                return;
-            }
+        setError(null);
 
-            if (formData.id) {
-                await axios.put(`${API_URL}/${formData.id}`, formData, {
-                    headers: { Authorization: `Bearer ${token}` }
-                });
-            } else {
-                await axios.post(API_URL, formData, {
-                    headers: { Authorization: `Bearer ${token}` }
-                });
-            }
-            
+        // 👇 1. CLEANING DATA (KRITIS)
+        const dataToSend = cleanFormData(formData);
+        
+        const token = localStorage.getItem('token');
+        const isUpdate = !!formData.id;
+        const url = isUpdate ? `${API_URL}/${formData.id}` : API_URL;
+        const method = isUpdate ? 'put' : 'post';
+
+        try {
+            const response = await axios({
+                method: method,
+                url: url,
+                data: dataToSend, // Gunakan data yang sudah bersih
+                headers: { Authorization: `Bearer ${token}` }
+            });
+
+            toast.success(`Menu berhasil di${isUpdate ? 'update' : 'tambah'}!`);
+            setShowForm(false);
             setFormData(initialFormState);
             fetchMenus();
         } catch (err) {
