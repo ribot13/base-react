@@ -11,7 +11,7 @@
  Target Server Version : 80044 (8.0.44)
  File Encoding         : 65001
 
- Date: 08/12/2025 21:29:26
+ Date: 08/12/2025 21:42:04
 */
 
 SET NAMES utf8mb4;
@@ -102,14 +102,14 @@ COMMIT;
 -- Records of user_roles
 -- ----------------------------
 BEGIN;
-INSERT INTO `user_roles` (`user_id`, `role_id`) VALUES (1, 1), (3, 2), (6, 2), (4, 3);
+INSERT INTO `user_roles` (`user_id`, `role_id`) VALUES (1, 1), (3, 2), (4, 3);
 COMMIT;
 
 -- ----------------------------
 -- Records of users
 -- ----------------------------
 BEGIN;
-INSERT INTO `users` (`id`, `username`, `password`, `full_name`, `email`, `birthday`, `created_at`, `updated_at`, `is_active`, `_deleted`) VALUES (1, 'admin', '$2b$10$nTN1rcDz44VUBx1egX1h/OpefnnoDq7rRKtjavugb3RudapdBUoVK', 'Arie K Ramdhani', 'ak.ramdhani@gmail.com', '1980-07-13', '2025-11-17 02:52:42', NULL, 1, 0), (3, 'bambang13', '$2b$10$u1gVssOlv2a3ucD2NfLsauBsfZCPaZQRGutQaYdUbkRYZcKOwkVL6', 'Bambang Petro Syamsudin', 'bamtro@gmail.com', NULL, '2025-11-17 10:23:11', NULL, 1, 0), (4, 'syiefa01', '$2b$10$EENL3QO1nbxVfZv/A246KeKfSNZXsG2UUCRRhcY2vauuGeuV7r1Mq', 'Syiefa Aja', 'syiefa@marawa.id', NULL, '2025-11-19 03:44:02', '2025-12-03 14:32:22', 1, 0), (6, 'cucun', '$2b$10$ZhFbFm7hEUb0WeC8bP9n.uA8UAjwfp7mFS35tlkTluqmAbdRHrNDm', 'Cucun Wirnatyo', 'cucun@gmail.com', NULL, '2025-12-03 14:03:46', '2025-12-03 14:03:46', 1, 0);
+INSERT INTO `users` (`id`, `username`, `password`, `full_name`, `email`, `birthday`, `created_at`, `updated_at`, `is_active`, `_deleted`) VALUES (1, 'admin', '$2b$10$oqiMoHi5E45CTH3RdmbuJepLx3HsNffr0/A5jhv2hblISY405iCua', 'Saya Admin', 'saya.admin@gmail.com', '1980-07-13', '2025-11-17 02:52:42', '2025-12-08 21:40:27', 1, 0), (3, 'bambang13', '$2b$10$tAfkLQa.ydlkT1HGfxw/WeD/sRTGBOW6XXFxCy6gSM/gWp8NxsC4K', 'Bambang Petro Syamsudin', 'bamtro@gmail.com', NULL, '2025-11-17 10:23:11', '2025-12-08 21:39:49', 1, 0), (4, 'syiefa01', '$2b$10$9lQKdOQ9WEelWGwFgAN2c.AZSWccMvKBdSZus2drV3qcDY9mZdlGK', 'Syiefa Aja', 'syiefa@marawa.id', NULL, '2025-11-19 03:44:02', '2025-12-08 21:40:56', 1, 0);
 COMMIT;
 
 SET FOREIGN_KEY_CHECKS = 1;
