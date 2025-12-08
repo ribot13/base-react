@@ -18,6 +18,38 @@ module.exports = (sequelize, DataTypes) => {
             type: DataTypes.STRING,
             allowNull: true
         },
+        default_base_price: {
+            type: DataTypes.DECIMAL(15, 2), // atau DataTypes.DOUBLE
+            defaultValue: 0
+        },
+        default_sales_price: {
+            type: DataTypes.DECIMAL(15, 2),
+            defaultValue: 0
+        },
+        default_max_price: {
+            type: DataTypes.DECIMAL(15, 2),
+            defaultValue: 0
+        },
+        default_length: {
+            type: DataTypes.DOUBLE, // atau DataTypes.DOUBLE
+            defaultValue: 0
+        },
+        default_width: {
+            type: DataTypes.DOUBLE,
+            defaultValue: 0
+        },
+        default_height: {
+            type: DataTypes.DOUBLE,
+            defaultValue: 0
+        },
+        default_weight: {
+            type: DataTypes.DOUBLE, // atau DataTypes.DOUBLE
+            defaultValue: 0
+        },
+        default_volumetric_weight: {
+            type: DataTypes.DOUBLE,
+            defaultValue: 0
+        },
         description: {
             type: DataTypes.TEXT,
             allowNull: true
