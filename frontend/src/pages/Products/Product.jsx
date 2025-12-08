@@ -161,7 +161,7 @@ const ProductIndex = () => {
                         </td>
                         <td>{p.Stock?.sku || "-"}</td>
                         <td>
-                          Rp {parseInt(p.price_sell).toLocaleString("id-ID")}
+                          Rp {parseInt(p.sales_price).toLocaleString("id-ID")}
                         </td>
 
                         {/* Kolom Stok dengan Badge */}
