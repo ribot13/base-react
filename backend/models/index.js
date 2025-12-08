@@ -38,6 +38,7 @@ db.Product = require('./product')(sequelize, DataTypes);
 db.ProductStock = require('./productStock')(sequelize, DataTypes);
 db.ProductImage = require('./productImage')(sequelize, DataTypes);
 db.ProductWholesale = require('./productWholesale')(sequelize, DataTypes);
+db.ProductCatalog=require('./catalog');
 // Anda mungkin juga perlu membuat model untuk tabel pivot user_roles dan role_permissions
 // Jika Anda tidak menggunakan file model terpisah, Sequelize akan membuatnya secara implisit.
 
@@ -68,5 +69,8 @@ if (db.ProductCategory && db.ProductCategory.associate) {
 if (db.Product && db.Product.associate) {
     db.Product.associate(db);
 }
+
+
+    
 
 module.exports = db;

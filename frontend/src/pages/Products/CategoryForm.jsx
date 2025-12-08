@@ -12,6 +12,8 @@ import {
   fetchCategories,
 } from "../../services/product.category.service";
 
+
+
 const ProductCategoryForm = () => {
   const { id } = useParams();
   const navigate = useNavigate();
