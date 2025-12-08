@@ -33,6 +33,7 @@ db.Role = require('./role')(sequelize, DataTypes);
 db.Permission = require('./permission')(sequelize, DataTypes);
 db.UserPermission = require('./userPermission')(sequelize, DataTypes); 
 db.MenuItem=require('./MenuItem')(sequelize,DataTypes);
+db.ProductCategory=require('./productCategory')(sequelize,DataTypes);
 // Anda mungkin juga perlu membuat model untuk tabel pivot user_roles dan role_permissions
 // Jika Anda tidak menggunakan file model terpisah, Sequelize akan membuatnya secara implisit.
 
@@ -54,5 +55,8 @@ db.Permission.belongsToMany(db.User, { through: db.UserPermission, foreignKey: '
 db.UserPermission.belongsTo(db.User, { foreignKey: 'user_id' });
 db.UserPermission.belongsTo(db.Permission, { foreignKey: 'permission_id' });
 
+if (db.ProductCategory && db.ProductCategory.associate) {
+    db.ProductCategory.associate(db);
+}
 
 module.exports = db;

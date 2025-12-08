@@ -3,6 +3,7 @@ const authRoutes = require('./auth.routes');
 const menuRoutes = require('./menu.routes');
 const userRoutes = require('./user.routes');
 const roleRoutes = require('./role.routes');
+const productCategoryRoutes=require('./product.category.routes');
 
 /**
  * Fungsi untuk mendaftarkan semua rute ke instance Express app.
@@ -15,6 +16,7 @@ module.exports = (app) => {
         ['/api/menu', menuRoutes],
         ['/api/admin/users', userRoutes],
         ['/api/roles', roleRoutes],
+        ['/api/product-categories', productCategoryRoutes],
     ];
 
     routes.forEach(([path, router]) => {
