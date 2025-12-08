@@ -5,7 +5,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { FiSave, FiArrowLeft, FiPlus, FiTrash } from 'react-icons/fi';
 import { useAuth } from '../../context/AuthContext';
-import { createProduct, fetchProductById } from '../../services/product.service';
+import { createProduct, fetchProductById , updateProduct} from '../../services/product.service';
 import { fetchCategories } from '../../services/product.category.service';
 
 const ProductForm = () => {
@@ -31,14 +31,69 @@ const ProductForm = () => {
 
     useEffect(() => {
         const init = async () => {
-            const cats = await fetchCategories(token);
-            setCategories(cats);
-            if (isEdit) {
-                // Logic fetch detail product & populate formData here
+            setLoading(true);
+            try {
+                // 1. Ambil Data Kategori (untuk dropdown)
+                const cats = await fetchCategories(token);
+                setCategories(cats);
+
+                // 2. Jika Mode Edit, Ambil Detail Produk
+                if (isEdit) {
+                    const data = await fetchProductById(token, id);
+                    
+                    // 3. Masukkan data ke Form (Mapping Data)
+                    setFormData({
+                        name: data.name,
+                        category_id: data.category_id || '',
+                        description: data.description || '',
+                        visibility: data.visibility,
+                        
+                        // Harga
+                        // Pastikan dikonversi ke angka agar tidak error di input type="number"
+                        price_modal: parseFloat(data.price_modal) || 0,
+                        price_sell: parseFloat(data.price_sell) || 0,
+                        price_strike: parseFloat(data.price_strike) || 0,
+                        
+                        // Inventaris (Diambil dari relasi Stock)
+                        sku: data.Stock?.sku || '',
+                        stock_current: data.Stock?.stock_current || 0,
+                        stock_minimum: data.Stock?.stock_minimum || 0,
+                        
+                        // Dimensi
+                        weight: data.weight || 0,
+                        length: data.length || 0,
+                        width: data.width || 0,
+                        height: data.height || 0,
+                        volumetric_weight: data.volumetric_weight || 0,
+                        
+                        // Preorder
+                        is_preorder: data.is_preorder,
+                        po_process_time: data.po_process_time || 0,
+                        po_dp_requirement: data.po_dp_requirement || 'none',
+                        po_dp_type: data.po_dp_type || 'fixed',
+                        po_dp_value: parseFloat(data.po_dp_value) || 0,
+                        
+                        // SEO
+                        slug: data.slug || '',
+                        seo_title: data.seo_title || '',
+                        seo_description: data.seo_description || '',
+                        
+                        // Array (Grosir & Gambar)
+                        // Pastikan Wholesales dan Images ada di include controller backend
+                        wholesales: data.Wholesales || [], 
+                        images: data.Images || [] 
+                    });
+                }
+            } catch (err) {
+                console.error(err);
+                toast.error("Gagal memuat data produk: " + err.message);
+            } finally {
+                setLoading(false);
             }
         };
+
         init();
-    }, [id]);
+    }, [id, token, isEdit]);
 
     const handleChange = (e) => {
         const { name, value, type, checked } = e.target;
@@ -69,11 +124,22 @@ const ProductForm = () => {
         e.preventDefault();
         setLoading(true);
         try {
-            await createProduct(token, formData);
-            toast.success('Produk disimpan!');
+            if (isEdit) {
+                // MODE EDIT: Panggil updateProduct (PUT)
+                await updateProduct(token, id, formData);
+                toast.success('Produk berhasil diperbarui!');
+            } else {
+                // MODE BARU: Panggil createProduct (POST)
+                await createProduct(token, formData);
+                toast.success('Produk berhasil dibuat!');
+            }
             navigate('/admin/products');
-        } catch (err) { toast.error(err.message); }
-        finally { setLoading(false); }
+        } catch (err) {
+            console.error(err);
+            toast.error(err.message);
+        } finally {
+            setLoading(false);
+        }
     };
 
     return (
