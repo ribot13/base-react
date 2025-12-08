@@ -20,6 +20,8 @@ import UserAdminPage from "./pages/Users";
 import UserFormPage from "./pages/Users/form.jsx";
 import ProductCategoryIndex from "./pages/Products/category.jsx";
 import ProductCategoryForm from "./pages/Products/CategoryForm.jsx";
+import ProductIndex from "./pages/Products/Product.jsx";
+import ProductForm from "./pages/Products/ProductForm.jsx";
 
 // Guard
 import ProtectedRoute from "./components/ProtectedRoute.jsx";
@@ -52,11 +54,27 @@ const App = () => (
             <Route path="/dashboard" element={<DashboardPage />} />
             {/* Halaman Produk */}
             <Route
-              path="/product/category"
+              path="admin/products"
+              element={<ProductIndex />}
+            />
+            <Route
+              path="admin/products/create"
+              element={<ProductForm />}
+            />
+            <Route
+              path="admin/products/edit/:id"
+              element={<ProductForm />}
+            />
+            <Route
+              path="admin/products/category"
               element={<ProductCategoryIndex />}
             />
             <Route
-              path="/product/category/:id"
+              path="admin/products/category/create"
+              element={<ProductCategoryForm />}
+            />
+            <Route
+              path="admin/products/category/edit/:id"
               element={<ProductCategoryForm />}
             />
 

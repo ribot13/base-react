@@ -135,21 +135,24 @@ const ProductCategoryIndex = () => {
     
     // --- Logika Perubahan Urutan ---
     const handleMove = async (category, siblingCategory) => {
+        // Cek validasi sederhana
         if (!siblingCategory) return;
         
         try {
-            // Data untuk API: Tukar nilai order_index kedua kategori
+            // Payload menggunakan order_index ASLI dari masing-masing item
             const payload = {
                 categoryId: category.id,
                 siblingId: siblingCategory.id,
-                categoryOrder: siblingCategory.order_index, // Nilai yang ditukar
-                siblingOrder: category.order_index          // Nilai yang ditukar
+                categoryOrder: category.order_index,       
+                siblingOrder: siblingCategory.order_index   
             };
 
+            // Panggil API (Variabel updateCategoryOrder dari import di atas)
             await updateCategoryOrder(token, payload);
+            
             toast.success('Urutan berhasil diperbarui!');
             
-            // Reload data dari API untuk update UI
+            // Refresh tampilan (Variabel loadData dari fungsi di atas)
             await loadData(); 
             
         } catch (error) {
@@ -162,7 +165,7 @@ const ProductCategoryIndex = () => {
             <div className="card-panel">
                 <div className="d-flex justify-content-between align-items-center mb-4 pb-3 border-bottom">
                     <h4 className="m-0 fw-bold">Kategori Produk (Hierarki)</h4>
-                    <button className="btn btn-primary btn-sm" onClick={() => navigate('/admin/product/category/new')}>
+                    <button className="btn btn-primary btn-sm" onClick={() => navigate('/admin/products/category/create')}>
                         <FiPlus className="me-2" /> Tambah Kategori
                     </button>
                 </div>
@@ -196,7 +199,7 @@ const ProductCategoryIndex = () => {
                                             key={cat.id} 
                                             category={cat} 
                                             level={0} 
-                                            onEdit={(id) => navigate(`/admin/product/category/${id}`)} 
+                                            onEdit={(id) => navigate(`/admin/products/category/edit/${id}`)} 
                                             onDelete={handleDelete}
                                             onMove={handleMove}
                                             siblings={categoryTree} // Root nodes adalah siblings

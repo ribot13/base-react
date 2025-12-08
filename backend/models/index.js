@@ -34,6 +34,10 @@ db.Permission = require('./permission')(sequelize, DataTypes);
 db.UserPermission = require('./userPermission')(sequelize, DataTypes); 
 db.MenuItem=require('./MenuItem')(sequelize,DataTypes);
 db.ProductCategory=require('./productCategory')(sequelize,DataTypes);
+db.Product = require('./product')(sequelize, DataTypes);
+db.ProductStock = require('./productStock')(sequelize, DataTypes);
+db.ProductImage = require('./productImage')(sequelize, DataTypes);
+db.ProductWholesale = require('./productWholesale')(sequelize, DataTypes);
 // Anda mungkin juga perlu membuat model untuk tabel pivot user_roles dan role_permissions
 // Jika Anda tidak menggunakan file model terpisah, Sequelize akan membuatnya secara implisit.
 
@@ -55,8 +59,14 @@ db.Permission.belongsToMany(db.User, { through: db.UserPermission, foreignKey: '
 db.UserPermission.belongsTo(db.User, { foreignKey: 'user_id' });
 db.UserPermission.belongsTo(db.Permission, { foreignKey: 'permission_id' });
 
+// B. Relasi Kategori Produk
 if (db.ProductCategory && db.ProductCategory.associate) {
     db.ProductCategory.associate(db);
+}
+
+// C. Relasi Produk (PENTING: Ini yang sebelumnya hilang)
+if (db.Product && db.Product.associate) {
+    db.Product.associate(db);
 }
 
 module.exports = db;

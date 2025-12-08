@@ -1,7 +1,7 @@
 // frontend/src/services/product.category.service.js
 import { APP_CONFIG } from '../config/appConfig';
 
-const API_URL = `${APP_CONFIG.API_BASE_URL}/product-categories`;
+const API_URL = `${APP_CONFIG.API_BASE_URL}/products/category`;
 
 const handleResponse = async (response) => {
     if (!response.ok) {

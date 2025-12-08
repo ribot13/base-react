@@ -62,6 +62,8 @@ const ProductCategoryForm = () => {
         setFormData(prev => ({ ...prev, [name]: value }));
     };
 
+    
+
     const handleSubmit = async (e) => {
         e.preventDefault();
         setLoading(true);
@@ -73,7 +75,7 @@ const ProductCategoryForm = () => {
                 await createCategory(token, formData);
                 toast.success('Kategori berhasil dibuat');
             }
-            navigate('/admin/product/category');
+            navigate('/admin/products/category');
         } catch (error) {
             toast.error(error.message);
         } finally {
@@ -85,7 +87,7 @@ const ProductCategoryForm = () => {
         <div className="container-fluid p-0">
             <div className="card-panel">
                 <div className="d-flex align-items-center mb-4 pb-3 border-bottom">
-                    <button className="btn btn-outline-secondary btn-sm me-3" onClick={() => navigate('/admin/product/category')}>
+                    <button className="btn btn-outline-secondary btn-sm me-3" onClick={() => navigate('/admin/products/category')}>
                         <FiArrowLeft />
                     </button>
                     <h4 className="m-0 fw-bold">{isEditMode ? 'Edit Kategori' : 'Buat Kategori Baru'}</h4>
@@ -151,7 +153,7 @@ const ProductCategoryForm = () => {
                     </div>
 
                     <div className="d-flex justify-content-end gap-2 mt-4 border-top pt-3">
-                        <button type="button" className="btn btn-secondary" onClick={() => navigate('/admin/product/category')}>Batal</button>
+                        <button type="button" className="btn btn-secondary" onClick={() => navigate('/admin/products/category')}>Batal</button>
                         <button type="submit" className="btn btn-primary" disabled={loading}>
                             <FiSave className="me-2" /> Simpan
                         </button>

@@ -12,6 +12,28 @@ const createSlug = (text) => {
         .replace(/-+$/, '');            // Trim - dari belakang
 };
 
+// Helper untuk memastikan parent_id adalah INT atau NULL
+const parseParentId = (id) => {
+    // Jika null, undefined, atau string kosong, kembalikan null
+    if (id === null || id === undefined || id === "") return null;
+    
+    const parsedId = parseInt(id);
+    // Jika NaN atau 0 (sering dianggap null di form), kembalikan null, jika tidak, kembalikan ID
+    return isNaN(parsedId) || parsedId === 0 ? null : parsedId;
+};
+
+// Helper untuk mendapatkan order index tertinggi + 1 untuk Parent ID tertentu
+const getNextOrderIndex = async (parentId) => {
+    const maxOrder = await ProductCategory.max('order_index', {
+        where: { parent_id: parentId }
+    });
+    // Order index berikutnya adalah Max Order yang ada (atau 0 jika belum ada) + 1
+    return (maxOrder || 0) + 1;
+};
+
+// --- END OF HELPER ---
+
+
 // 1. GET ALL
 exports.findAll = async (req, res) => {
     try {
@@ -40,63 +62,101 @@ exports.findOne = async (req, res) => {
     }
 };
 
-// 3. CREATE
+// 3. CREATE (Revisi Total)
 exports.create = async (req, res) => {
+    const { name, parent_id, slug, description, visibility } = req.body;
+    
+    // Validasi dasar
+    if (!name) return res.status(400).json({ message: "Nama kategori wajib diisi." });
+
     try {
-        const { name, parent_id, description, visibility, order_index } = req.body;
+        const parsedParentId = parseParentId(parent_id);
+        let finalSlug = slug || createSlug(name);
         
-        // Generate slug otomatis jika tidak dikirim
-        let slug = req.body.slug;
-        if (!slug && name) {
-            slug = createSlug(name);
+        // 1. Cek duplikasi slug
+        const existingCategory = await ProductCategory.findOne({ where: { slug: finalSlug } });
+        if (existingCategory) {
+            return res.status(400).json({ message: "Slug sudah digunakan. Silakan gunakan nama/slug lain." });
         }
+        
+        // 2. Tentukan order_index secara otomatis
+        const nextOrderIndex = await getNextOrderIndex(parsedParentId);
 
         const newCategory = await ProductCategory.create({
             name,
-            parent_id: parent_id || null, // Pastikan null jika kosong
-            slug,
+            parent_id: parsedParentId, 
+            slug: finalSlug,
             description,
             visibility,
-            order_index: order_index || 0
+            order_index: nextOrderIndex, // Order index dihitung otomatis
         });
 
         res.status(201).json(newCategory);
     } catch (error) {
-        res.status(500).json({ message: error.message });
+        console.error("Error creating category:", error.message);
+        res.status(500).json({ message: "Gagal membuat kategori: " + error.message });
     }
 };
 
-// 4. UPDATE
+// 4. UPDATE (Revisi Total)
 exports.update = async (req, res) => {
     try {
         const { name, parent_id, slug, description, visibility, order_index } = req.body;
+        const categoryId = req.params.id;
+
+        const category = await ProductCategory.findByPk(categoryId);
+        if (!category) return res.status(404).json({ message: "Kategori tidak ditemukan" });
         
-        // Cek circular dependency sederhana (Parent tidak boleh dirinya sendiri)
-        if (parent_id && parseInt(parent_id) === parseInt(req.params.id)) {
-            return res.status(400).json({ message: "Kategori tidak bisa menjadi parent bagi dirinya sendiri." });
+        // Validasi dasar
+        if (!name) return res.status(400).json({ message: "Nama kategori wajib diisi." });
+        
+        const parsedParentId = parseParentId(parent_id);
+
+        // 1. Pencegahan: Tidak boleh menjadi parent diri sendiri
+        if (parsedParentId && parsedParentId == categoryId) {
+            return res.status(400).json({ message: "Kategori tidak dapat menjadi sub-kategori dari dirinya sendiri." });
         }
 
-        const category = await ProductCategory.findByPk(req.params.id);
-        if (!category) return res.status(404).json({ message: "Kategori tidak ditemukan" });
-
-        // Update slug jika nama berubah dan slug tidak diset manual
+        // 2. Tentukan Slug Akhir
         let finalSlug = slug;
-        if (!finalSlug && name !== category.name) {
+        // Jika slug kosong ATAU nama kategori berubah, buat slug baru
+        if (!finalSlug || name !== category.name) {
             finalSlug = createSlug(name);
         }
 
-        await category.update({
+        // 3. Cek duplikasi slug (kecuali kategori yang sedang diupdate)
+        const existingCategory = await ProductCategory.findOne({ 
+            where: { 
+                slug: finalSlug, 
+                id: { [Op.ne]: categoryId } // Op.ne = Not Equal
+            } 
+        });
+        
+        if (existingCategory) {
+            return res.status(400).json({ message: "Slug sudah digunakan oleh kategori lain." });
+        }
+
+        const updateData = {
             name,
-            parent_id: parent_id || null,
+            parent_id: parsedParentId,
             slug: finalSlug,
             description,
             visibility,
-            order_index
-        });
+            // order_index dari req.body atau order_index lama
+            order_index: order_index !== undefined ? order_index : category.order_index 
+        };
+        
+        // 4. Jika parent_id berubah, dan order_index tidak dikirim (atau tidak valid), hitung order_index baru.
+        if (parsedParentId !== category.parent_id && (order_index === undefined || order_index === null)) {
+             updateData.order_index = await getNextOrderIndex(parsedParentId);
+        }
+
+        await category.update(updateData);
 
         res.status(200).json({ message: "Kategori berhasil diupdate" });
     } catch (error) {
-        res.status(500).json({ message: error.message });
+        console.error("Error updating category:", error.message);
+        res.status(500).json({ message: "Gagal mengupdate kategori: " + error.message });
     }
 };
 
