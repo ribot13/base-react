@@ -10,7 +10,7 @@ const api = axios.create({
   },
 });
 
-// 👇 INTERCEPTOR REQUEST: Menambahkan Token ke Header
+
 api.interceptors.request.use(
   (config) => {
     // Ambil token dari localStorage
@@ -26,7 +26,7 @@ api.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
-// 👇 INTERCEPTOR RESPONSE: Menangani 401/403 (Token Expired/Invalid)
+
 api.interceptors.response.use(
     (response) => response,
     (error) => {

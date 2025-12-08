@@ -1,41 +1,38 @@
-// backend/middleware/upload.js
+// backend/middlewares/upload.js
 const multer = require('multer');
 const path = require('path');
+const fs = require('fs');
 
-// 1. Storage Configuration: Tentukan tempat penyimpanan dan nama file
+// Pastikan folder upload ada
+const uploadDir = path.join(__dirname, '../public/uploads/products');
+if (!fs.existsSync(uploadDir)) {
+    fs.mkdirSync(uploadDir, { recursive: true });
+}
+
 const storage = multer.diskStorage({
-  // Tentukan folder tujuan penyimpanan
-  destination: (req, file, cb) => {
-    // Path.join memastikan path benar di OS manapun
-    cb(null, path.join(__dirname, '..', 'public', 'images')); 
-  },
-  
-  // Tentukan nama file yang akan disimpan
-  filename: (req, file, cb) => {
-    // Contoh format nama file: product-1678880000000.jpg
-    const ext = path.extname(file.originalname); // Ambil ekstensi asli (.jpg, .png)
-    const timestamp = Date.now();
-    const uniqueFileName = 'product-' + timestamp + ext;
-    cb(null, uniqueFileName);
-  }
+    destination: (req, file, cb) => {
+        cb(null, uploadDir);
+    },
+    filename: (req, file, cb) => {
+        // Nama file unik: timestamp-random.ext
+        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+        cb(null, uniqueSuffix + path.extname(file.originalname));
+    }
 });
 
-// 2. Filter File: Hanya izinkan JPEG dan PNG
 const fileFilter = (req, file, cb) => {
-  if (file.mimetype === 'image/jpeg' || file.mimetype === 'image/png' || file.mimetype === 'image/jpg') {
-    cb(null, true); // Izinkan
-  } else {
-    cb(new Error('Format file harus JPG atau PNG'), false); // Tolak
-  }
+    // Hanya terima gambar
+    if (file.mimetype.startsWith('image/')) {
+        cb(null, true);
+    } else {
+        cb(new Error('Hanya file gambar yang diperbolehkan!'), false);
+    }
 };
 
-// 3. Konfigurasi Utama Multer
 const upload = multer({ 
-  storage: storage,
-  limits: { 
-    fileSize: 1024 * 1024 * 5 // Batas maksimal 5MB
-  },
-  fileFilter: fileFilter
+    storage: storage,
+    fileFilter: fileFilter,
+    limits: { fileSize: 2 * 1024 * 1024 } // Batas 2MB
 });
 
 module.exports = upload;

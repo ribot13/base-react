@@ -1,4 +1,5 @@
 // routes/index.js (Bundler untuk semua rute aplikasi)
+const uploadRoutes = require('./upload.routes');
 const authRoutes = require('./auth.routes');
 const menuRoutes = require('./menu.routes');
 const userRoutes = require('./user.routes');
@@ -13,6 +14,7 @@ const productRoutes=require('./product.routes');
 module.exports = (app) => {
     // Definisi rute: [BASE_PATH, ROUTER_MODULE]
     const routes = [
+        ['/api/upload', uploadRoutes],
         ['/api/auth', authRoutes],
         ['/api/menu', menuRoutes],
         ['/api/admin/users', userRoutes],

@@ -1,12 +1,14 @@
-/* eslint-disable react-hooks/exhaustive-deps */
-/* eslint-disable no-unused-vars */
+ 
+ 
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { toast } from 'react-toastify';
-import { FiSave, FiArrowLeft, FiPlus, FiTrash } from 'react-icons/fi';
+import { FiSave, FiArrowLeft, FiPlus, FiTrash, FiUpload,FiX,FiCheckCircle,FiCircle } from 'react-icons/fi';
 import { useAuth } from '../../context/AuthContext';
 import { createProduct, fetchProductById , updateProduct} from '../../services/product.service';
+import { uploadImage, deleteImageFromServer } from '../../services/upload.service';
 import { fetchCategories } from '../../services/product.category.service';
+import { APP_CONFIG } from '../../config/appConfig';
 
 const ProductForm = () => {
     const { id } = useParams();
@@ -16,6 +18,7 @@ const ProductForm = () => {
 
     const [loading, setLoading] = useState(false);
     const [categories, setCategories] = useState([]);
+    const [ uploadedFilesSession,setUploadedFilesSession]=useState([]);
     
     // State Utama
     const [formData, setFormData] = useState({
@@ -95,6 +98,75 @@ const ProductForm = () => {
         init();
     }, [id, token, isEdit]);
 
+    // 1. Handle File Selection & Upload
+    const handleImageUpload = async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        // ... validasi size ...
+
+        try {
+            const res = await uploadImage(token, file);
+            
+            // Catat URL ini sebagai file baru session ini
+            setUploadedFilesSession(prev => [...prev, res.url]);
+
+            const newImage = {
+                image_path: res.url,
+                is_main: formData.images.length === 0, 
+            };
+            setFormData(prev => ({ ...prev, images: [...prev.images, newImage] }));
+            toast.success("Gambar terupload");
+        } catch (error) {
+            toast.error(error.message);
+        } finally {
+            e.target.value = null; 
+        }
+    };
+
+    // 2. Hapus Gambar
+    const removeImage = async (index) => {
+        const imageToDelete = formData.images[index];
+        
+        // Hapus dari state UI dulu agar responsif
+        setFormData(prev => {
+            const newImages = [...prev.images];
+            const wasMain = newImages[index].is_main;
+            newImages.splice(index, 1);
+            if (wasMain && newImages.length > 0) newImages[0].is_main = true;
+            return { ...prev, images: newImages };
+        });
+
+        // Panggil API Hapus di background
+        await deleteImageFromServer(token, imageToDelete.image_path);
+        
+        // Hapus juga dari tracking session jika ada
+        setUploadedFilesSession(prev => prev.filter(url => url !== imageToDelete.image_path));
+    };
+
+    // 3. Set Gambar Utama
+    const setMainImage = (index) => {
+        setFormData(prev => {
+            const newImages = prev.images.map((img, i) => ({
+                ...img,
+                is_main: i === index // Hanya index yang dipilih yang true
+            }));
+            return { ...prev, images: newImages };
+        });
+    };
+
+    const handleCancel = async () => {
+        // Jika mode Edit, kita hati-hati. Kita hanya hapus file yang BARU diupload sesi ini.
+        // Jika mode New, semua file di uploadedFilesSession akan dihapus.
+        
+        if (uploadedFilesSession.length > 0) {
+            const toastId = toast.loading("Membersihkan data...");
+            // Hapus semua file baru secara paralel
+            await Promise.all(uploadedFilesSession.map(url => deleteImageFromServer(token, url)));
+            toast.dismiss(toastId);
+        }
+        navigate('/admin/products');
+    };
+
     const handleChange = (e) => {
         const { name, value, type, checked } = e.target;
         const val = type === 'checkbox' ? checked : value;
@@ -145,7 +217,7 @@ const ProductForm = () => {
     return (
         <form onSubmit={handleSubmit} className="container-fluid p-0 mb-5">
             <div className="d-flex justify-content-between align-items-center mb-4">
-                <button type="button" className="btn btn-outline-secondary" onClick={() => navigate(-1)}><FiArrowLeft/> Kembali</button>
+                <button type="button" className="btn btn-outline-secondary" onClick={handleCancel}><FiArrowLeft/> Kembali</button>
                 <h4 className="fw-bold m-0">{isEdit ? 'Edit Produk' : 'Produk Baru'}</h4>
                 <button type="submit" className="btn btn-primary" disabled={loading}><FiSave className="me-2"/> Simpan</button>
             </div>
@@ -163,6 +235,72 @@ const ProductForm = () => {
                             <div className="mb-3">
                                 <label className="form-label">Deskripsi</label>
                                 <textarea className="form-control" rows="4" name="description" value={formData.description} onChange={handleChange}></textarea>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* --- AREA UPLOAD GAMBAR --- */}
+                    <div className="card shadow-sm border-0 mb-4">
+                        <div className="card-body">
+                            <h6 className="fw-bold mb-3">Gambar Produk</h6>
+                            
+                            {/* Tombol Upload */}
+                            <div className="mb-3">
+                                <label className="btn btn-outline-primary w-100 p-3 border-dashed" style={{borderStyle: 'dashed'}}>
+                                    <FiUpload size={24} className="mb-2 d-block mx-auto" />
+                                    <span>Klik untuk Upload Gambar</span>
+                                    <input 
+                                        type="file" 
+                                        className="d-none" 
+                                        accept="image/*"
+                                        onChange={handleImageUpload}
+                                        disabled={loading}
+                                    />
+                                </label>
+                                <small className="text-muted d-block text-center mt-2">Maksimal 2MB. Format: JPG, PNG.</small>
+                            </div>
+
+                            {/* List Preview Gambar */}
+                            <div className="row g-2">
+                                {formData.images.map((img, idx) => (
+                                    <div key={idx} className="col-4 col-md-3">
+                                        <div className="position-relative border rounded overflow-hidden" style={{ aspectRatio: '1/1' }}>
+                                            {/* Gambar */}
+                                            <img 
+                                                // Jika img.image_path path relatif (/uploads/...), tambahkan BASE URL
+                                                // Jika path absolut (http...), biarkan
+                                                src={img.image_path.startsWith('http') ? img.image_path : `${APP_CONFIG.API_BASE_URL.replace('/api', '')}${img.image_path}`}
+                                                alt={`Preview ${idx}`}
+                                                className="w-100 h-100"
+                                                style={{ objectFit: 'cover' }}
+                                            />
+                                            
+                                            {/* Tombol Hapus (Pojok Kanan Atas) */}
+                                            <button 
+                                                type="button"
+                                                className="btn btn-danger btn-sm position-absolute top-0 end-0 m-1 p-0 d-flex align-items-center justify-content-center"
+                                                style={{ width: 20, height: 20, borderRadius: '50%' }}
+                                                onClick={() => removeImage(idx)}
+                                            >
+                                                <FiX size={12} />
+                                            </button>
+
+                                            {/* Tombol Set Main (Bagian Bawah) */}
+                                            <button
+                                                type="button"
+                                                className={`btn btn-sm w-100 position-absolute bottom-0 start-0 rounded-0 ${img.is_main ? 'btn-success' : 'btn-light opacity-75'}`}
+                                                style={{fontSize: '10px'}}
+                                                onClick={() => setMainImage(idx)}
+                                            >
+                                                {img.is_main ? (
+                                                    <><FiCheckCircle className="me-1"/> Utama</>
+                                                ) : (
+                                                    <><FiCircle className="me-1"/> Jadikan Utama</>
+                                                )}
+                                            </button>
+                                        </div>
+                                    </div>
+                                ))}
                             </div>
                         </div>
                     </div>

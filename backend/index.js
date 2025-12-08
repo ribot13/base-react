@@ -1,5 +1,5 @@
-// index.js (atau server.js/app.js)
-
+// index.js
+const path = require('path');
 require('dotenv').config();
 const express = require('express');
 const bodyParser = require('body-parser');
@@ -8,6 +8,8 @@ const setupRoutes = require('./routes');
 
 const app = express();
 const port = process.env.PORT || 5001;
+
+app.use('/uploads', express.static(path.join(__dirname, 'public/uploads')));
 
 // --- 1. Konfigurasi Sequelize ---
 const db = require('./models');
