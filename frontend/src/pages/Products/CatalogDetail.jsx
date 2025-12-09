@@ -5,6 +5,7 @@ import { toast } from 'react-toastify';
 import { useAuth } from '../../context/AuthContext';
 // Pastikan path service benar
 import { fetchCatalogById, updateCatalog } from '../../services/catalog.service';
+// eslint-disable-next-line no-unused-vars
 import { fetchCatalogProducts,fetchProducts } from '../../services/product.service'; // Service ambil semua produk
 
 const CatalogDetail = () => {
@@ -23,7 +24,7 @@ const CatalogDetail = () => {
         const init = async () => {
             try {
                 // Load Catalog Detail (beserta produk di dalamnya)
-                const catalogData = await fetchCatalogProducts(token, id);
+                const catalogData = await fetchCatalogById(token, id);
                 setCatalog(catalogData);
                 setCurrentProducts(catalogData.Products || []);
 
