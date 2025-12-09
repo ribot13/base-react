@@ -22,6 +22,8 @@ import ProductCategoryIndex from "./pages/Products/category.jsx";
 import ProductCategoryForm from "./pages/Products/CategoryForm.jsx";
 import ProductIndex from "./pages/Products/Product.jsx";
 import ProductForm from "./pages/Products/ProductForm.jsx";
+import CatalogIndex from "./pages/Products/Catalog.jsx";
+import CatalogForm from "./pages/Products/CatalogForm.jsx";
 
 // Guard
 import ProtectedRoute from "./components/ProtectedRoute.jsx";
@@ -65,6 +67,7 @@ const App = () => (
               path="admin/products/edit/:id"
               element={<ProductForm />}
             />
+
             <Route
               path="admin/products/category"
               element={<ProductCategoryIndex />}
@@ -76,6 +79,19 @@ const App = () => (
             <Route
               path="admin/products/category/edit/:id"
               element={<ProductCategoryForm />}
+            />
+
+            <Route
+              path="admin/products/catalogs"
+              element={<CatalogIndex />}
+            />
+            <Route
+              path="admin/products/catalogs/create"
+              element={<CatalogForm />}
+            />
+            <Route
+              path="admin/products/catalogs/edit/:id"
+              element={<CatalogForm />}
             />
 
             {/* Halaman Admin */}

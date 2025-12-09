@@ -50,6 +50,11 @@ module.exports = (sequelize, DataTypes) => {
       as: "Wholesales",
       onDelete: "CASCADE",
     });
+    Product.belongsToMany(models.Catalog, {
+        through: models.ProductCatalog, // <-- Gunakan models.ProductCatalog
+        foreignKey: 'product_id',
+        as: 'Catalogs'
+    });
   };
 
   return Product;

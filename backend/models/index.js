@@ -38,7 +38,8 @@ db.Product = require('./product')(sequelize, DataTypes);
 db.ProductStock = require('./productStock')(sequelize, DataTypes);
 db.ProductImage = require('./productImage')(sequelize, DataTypes);
 db.ProductWholesale = require('./productWholesale')(sequelize, DataTypes);
-db.ProductCatalog=require('./catalog');
+db.Catalog=require('./catalog')(sequelize, DataTypes);
+db.ProductCatalog=require('./productCatalog')(sequelize, DataTypes);
 // Anda mungkin juga perlu membuat model untuk tabel pivot user_roles dan role_permissions
 // Jika Anda tidak menggunakan file model terpisah, Sequelize akan membuatnya secara implisit.
 
@@ -68,6 +69,13 @@ if (db.ProductCategory && db.ProductCategory.associate) {
 // C. Relasi Produk (PENTING: Ini yang sebelumnya hilang)
 if (db.Product && db.Product.associate) {
     db.Product.associate(db);
+}
+
+if (db.Catalog && db.Catalog.associate) {
+    db.Catalog.associate(db);
+}
+if (db.ProductCatalog && db.ProductCatalog.associate) {
+    db.ProductCatalog.associate(db);
 }
 
 
