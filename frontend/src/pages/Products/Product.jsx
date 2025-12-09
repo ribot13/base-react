@@ -61,17 +61,16 @@ const ProductIndex = () => {
 
   return (
     <div className="container-fluid p-0">
-      <div className="d-flex justify-content-between align-items-center mb-4">
-        <h4 className="fw-bold">Daftar Produk</h4>
-        <button
-          className="btn btn-primary"
-          onClick={() => navigate("/admin/products/create")}
-        >
-          <FiPlus className="me-2" /> Tambah Produk
-        </button>
-      </div>
-
-      <div className="card shadow-sm border-0">
+      <div className="card-panel">
+        <div className="d-flex justify-content-between align-items-center mb-4 pb-3 border-bottom">
+          <h4 className="fw-bold">Daftar Produk</h4>
+          <button
+            className="btn btn-primary"
+            onClick={() => navigate("/admin/products/create")}
+          >
+            <FiPlus className="me-2" /> Tambah Produk
+          </button>
+        </div>
         <div className="card-body p-0">
           <div className="table-responsive">
             <table className="table table-hover align-middle">
