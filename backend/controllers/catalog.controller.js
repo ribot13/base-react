@@ -48,7 +48,7 @@ exports.findOne = async (req, res) => {
             include: [{
                 model: Product,
                 as: 'Products',
-                through: { attributes: [] } // Kita tidak butuh data pivot di sini
+                through: { attributes: [] } 
             }]
         });
 
@@ -63,13 +63,16 @@ exports.findOne = async (req, res) => {
 
 // 3. CREATE CATALOG
 exports.create = async (req, res) => {
-    const { name, description, status } = req.body;
+    const { name, description, status,productIds=[] } = req.body;
     if (!name) {
         return res.status(400).json({ message: "Nama katalog wajib diisi." });
     }
 
     try {
         const newCatalog = await Catalog.create({ name, description, status });
+        if (productIds.length > 0) {
+            await newCatalog.addProducts(productIds); 
+        }
         res.status(201).json(newCatalog);
     } catch (error) {
         // Cek duplikasi nama
@@ -82,17 +85,19 @@ exports.create = async (req, res) => {
 
 // 4. UPDATE CATALOG
 exports.update = async (req, res) => {
-    const { name, description, status } = req.body;
+    const { name, description, status, productIds = [] } = req.body;
     const catalogId = req.params.id;
 
     try {
         const catalog = await Catalog.findByPk(catalogId);
-        if (!catalog) {
-            return res.status(404).json({ message: "Katalog tidak ditemukan." });
-        }
+
+        await sequelize.transaction(async (t) => {
+            await catalog.update({ name, description, status }, { transaction: t });
+            await catalog.setProducts(productIds, { transaction: t }); 
+        });
         
         await catalog.update({ name, description, status });
-        res.status(200).json({ message: "Katalog berhasil diupdate." });
+        res.status(200).json({ message: "Katalog berhasil diupdate dan produk disinkronisasi." });
 
     } catch (error) {
         if (error.name === 'SequelizeUniqueConstraintError') {

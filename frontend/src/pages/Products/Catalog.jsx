@@ -3,7 +3,7 @@
 // ./src/pages/Products/Catalog.jsx
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { FiPlus, FiEdit2, FiTrash2 } from "react-icons/fi";
+import { FiPlus, FiEdit2, FiTrash2, FiEye } from "react-icons/fi";
 import { toast } from "react-toastify";
 import { useAuth } from "../../context/AuthContext";
 // Asumsi file ini sudah ada (atau perlu dibuat) dan berisi fungsi API CRUD
@@ -107,9 +107,18 @@ const CatalogList = () => {
                   </td>
                   {/* product_count diambil dari fungsi aggregate di Controller backend */}
                   <td>{catalog.product_count || 0}</td>
-                  <td>
+                  <td width="1%" nowrap="nowrap">
                     <button
-                      className="btn btn-sm btn-outline-warning me-2"
+                      className="btn btn-sm btn-info text-white me-2"
+                      title="Lihat Detail & Produk"
+                      onClick={() =>
+                        navigate(`/admin/products/catalogs/${catalog.id}`)
+                      }
+                    >
+                      <FiEye />
+                    </button>
+                    <button
+                      className="btn btn-sm btn-warning me-2"
                       onClick={() =>
                         navigate(`/admin/products/catalogs/edit/${catalog.id}`)
                       }
@@ -117,7 +126,7 @@ const CatalogList = () => {
                       <FiEdit2 />
                     </button>
                     <button
-                      className="btn btn-sm btn-outline-danger"
+                      className="btn btn-sm btn-danger"
                       onClick={() => handleDelete(catalog.id)}
                     >
                       <FiTrash2 />

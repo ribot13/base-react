@@ -124,12 +124,6 @@ const CatalogForm = () => {
                                 onChange={handleChange}
                             ></textarea>
                         </div>
-
-                        {/* Di sini nanti akan menjadi tempat untuk Manajamen Produk */}
-                        <div className="col-12 border rounded p-3 bg-light">
-                            <h6 className="fw-bold">Manajemen Produk (Langkah Selanjutnya)</h6>
-                            <p className="mb-0 small text-muted">Akan ditambahkan fitur untuk memilih produk mana saja yang masuk ke katalog ini.</p>
-                        </div>
                     </div>
 
                     <div className="d-flex justify-content-end gap-2 mt-4 border-top pt-3">

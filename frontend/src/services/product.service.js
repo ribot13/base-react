@@ -53,3 +53,13 @@ export const deleteProduct = async (token, id) => {
     });
     return handleResponse(res);
 };
+
+export const fetchCatalogProducts = async (token) => {
+    // API endpoint ini harus mengembalikan minimal: [{id: 1, name: 'Produk A'}, {id: 2, name: 'Produk B'}]
+    // Gunakan endpoint findAll Products Anda
+    const response = await fetch(`${API_URL}`, { 
+        headers: { Authorization: `Bearer ${token}` } 
+    });
+    // Gunakan handler yang sama seperti di product.category.service.js
+    return response.json(); 
+};
