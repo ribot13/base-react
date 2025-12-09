@@ -8,7 +8,7 @@ exports.findAll = async (req, res) => {
         const products = await Product.findAll({
             include: [
                 { model: ProductCategory, as: 'Category', attributes: ['name'] },
-                { model: ProductStock, as: 'Stock' },
+                { model: ProductStock, as: 'Stock',attributes:['stock_current'] },
                 { model: ProductImage, as: 'Images', where: { is_main: true }, required: false }
             ],
             order: [['created_at', 'DESC']]

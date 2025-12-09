@@ -1,5 +1,5 @@
 // backend/controllers/catalog.controller.js
-const { Catalog, Product, ProductCatalog, sequelize } = require('../models');
+const { Catalog, Product, ProductCategory, sequelize } = require('../models');
 const { Op } = require('sequelize');
 
 // Helper untuk penanganan error
@@ -48,7 +48,14 @@ exports.findOne = async (req, res) => {
             include: [{
                 model: Product,
                 as: 'Products',
-                through: { attributes: [] } 
+                through: { attributes: [] } ,
+                include: [
+                    {
+                        model: ProductCategory,
+                        as: 'Category', // Pastikan alias ini sesuai dengan definisi di product.js (biasanya 'Category' atau 'ProductCategory')
+                        attributes: ['id', 'name'] // Ambil kolom yang perlu saja
+                    }
+                ]
             }]
         });
 
