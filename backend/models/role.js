@@ -14,5 +14,11 @@ module.exports = (sequelize, DataTypes) => {
         tableName: 'roles',
         timestamps: false // Opsional: Sesuaikan jika Anda menggunakan created_at/updated_at
     });
+
+    Role.associate = (models) => {
+        Role.belongsToMany(models.User, { through: 'user_roles', foreignKey: 'role_id', otherKey: 'user_id' });
+        Role.belongsToMany(models.Permission, { through: 'role_permissions', foreignKey: 'role_id', otherKey: 'permission_id' });
+    };
+
     return Role;
 };

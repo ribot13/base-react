@@ -33,5 +33,10 @@ module.exports = (sequelize, DataTypes) => {
         timestamps: true, // Sesuaikan ini dengan kolom created_at/updated_at Anda
         underscored: true // Opsional: jika kolom DB Anda menggunakan snake_case (misal: full_name)
     });
+
+    User.associate = (models) => {
+        User.belongsToMany(models.Role, { through: 'user_roles', foreignKey: 'user_id', otherKey: 'role_id' });
+    };
+
     return User;
 };

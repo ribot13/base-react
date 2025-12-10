@@ -327,20 +327,38 @@ const ProductForm = () => {
     e.preventDefault();
     setLoading(true);
     try {
-      let productId = id;
+      console.log("Variation Data State:", variationData);
+      // GABUNGKAN DATA: Form Data + Variation Data
+      const payload = {
+        ...formData, // Data produk, harga, gambar, dll
+        variationGroups: variationData.variationGroups, // Data Group Variasi
+        variants: variationData.variants // Data SKU Variasi
+      };
+
+      console.log("FINAL PAYLOAD:", payload);
+
       if (isEdit) {
-        // MODE EDIT: Panggil updateProduct (PUT)
-        await updateProduct(token, id, formData);
+        // --- MODE EDIT (Update) ---
+        // Untuk update, logic-nya mungkin masih terpisah atau mau digabung juga terserah backend update-nya.
+        // Asumsi saat ini kita hanya memperbaiki CREATE dulu.
+        await updateProduct(token, id, payload); 
+        
+        // Jika mode edit, variasi mungkin perlu disimpan terpisah atau backend updateProduct juga harus diupdate.
+        // Agar aman untuk EDIT, kita tetap panggil saveProductVariations terpisah jika backend update belum support transaction gabungan.
+        if (variationData.variants && variationData.variants.length > 0) {
+             await saveProductVariations(token, id, variationData);
+        }
+
         toast.success("Produk berhasil diperbarui!");
       } else {
-        // MODE BARU: Panggil createProduct (POST)
-        await createProduct(token, formData);
-        toast.success("Produk berhasil dibuat!");
+        // --- MODE BARU (CREATE) - SUDAH MENGGUNAKAN TRANSACTION ---
+        // Kita kirim payload yang sudah berisi variasi.
+        // Backend 'createProduct' yang baru akan menangani semuanya.
+        await createProduct(token, payload);
+        
+        toast.success("Produk dan Variasi berhasil dibuat!");
       }
-      if (variationData.variants && variationData.variants.length > 0) {
-        await saveProductVariations(token, productId, variationData);
-        toast.success("Variasi produk berhasil disimpan!");
-      }
+
       navigate("/admin/products");
     } catch (err) {
       console.error(err);

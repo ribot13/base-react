@@ -51,10 +51,18 @@ module.exports = (sequelize, DataTypes) => {
       onDelete: "CASCADE",
     });
     Product.belongsToMany(models.Catalog, {
-        through: models.ProductCatalog, // <-- Gunakan models.ProductCatalog
-        foreignKey: 'product_id',
-        as: 'Catalogs'
+      through: models.ProductCatalog, // <-- Gunakan models.ProductCatalog
+      foreignKey: 'product_id',
+      as: 'Catalogs'
     });
+    if (models.ProductVariationGroup) {
+      Product.hasMany(models.ProductVariationGroup, { foreignKey: 'product_id', as: 'VariationGroups', onDelete: 'CASCADE' });
+    }
+
+    if (models.ProductVariant) {
+      // "as: 'Variants'" <--- INI KUNCINYA. Controller memanggil 'Variants'
+      Product.hasMany(models.ProductVariant, { foreignKey: 'product_id', as: 'Variants', onDelete: 'CASCADE' });
+    }
   };
 
   return Product;

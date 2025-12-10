@@ -1,97 +1,84 @@
-// models/index.js
+// backend/models/index.js
+'use strict';
 
-const { Sequelize, DataTypes } = require('sequelize');
-// Pastikan file index.js Anda tidak mencoba memuat config.json lagi
+const fs = require('fs');
+const path = require('path');
+const Sequelize = require('sequelize');
+const process = require('process');
+const basename = path.basename(__filename);
+const db = {};
 
-// Ambil data langsung dari environment variables (process.env)
+// ============================================================
+// 1. KONEKSI DATABASE (MENGGUNAKAN STYLE LAMA ANDA via .env)
+// ============================================================
 const sequelize = new Sequelize(
     process.env.DB_NAME, 
     process.env.DB_USER, 
     process.env.DB_PASSWORD, 
     {
         host: process.env.DB_HOST,
-        // 👇 INI YANG HILANG ATAU TIDAK TERBACA
-        dialect: process.env.DB_DIALECT, 
-        // 👆 PASTIKAN DB_DIALECT di .env adalah 'mysql'
-
+        dialect: process.env.DB_DIALECT || 'mysql', // Fallback ke mysql jika env kosong
         logging: false, 
         define: {
-            timestamps: false
+            timestamps: false // Sesuai config lama Anda
+        },
+        pool: {
+            max: 5,
+            min: 0,
+            acquire: 30000,
+            idle: 10000
         }
     }
 );
 
-const db = {};
+// ============================================================
+// 2. LOAD MODELS SECARA OTOMATIS (PENTING UNTUK VARIASI)
+// ============================================================
+// Ini akan membaca semua file di folder models secara otomatis
+// sehingga Anda TIDAK PERLU lagi mengetik require manual satu per satu.
+fs
+  .readdirSync(__dirname)
+  .filter(file => {
+    return (
+      file.indexOf('.') !== 0 && // Abaikan file hidden
+      file !== basename &&       // Abaikan file index.js ini sendiri
+      file.slice(-3) === '.js' && // Hanya ambil file .js
+      file.indexOf('.test.js') === -1 // Abaikan file test
+    );
+  })
+  .forEach(file => {
+    const model = require(path.join(__dirname, file))(sequelize, Sequelize.DataTypes);
+    db[model.name] = model;
+  });
 
-db.Sequelize = Sequelize;
+// ============================================================
+// 3. JALANKAN ASOSIASI (RELASI)
+// ============================================================
+// Loop ini akan mengecek setiap model. Jika di dalam file model tersebut
+// ada fungsi "associate", maka fungsi itu akan dijalankan.
+// INI YANG MEMPERBAIKI ERROR "ProductVariationOption is not associated"
+Object.keys(db).forEach(modelName => {
+  if (db[modelName].associate) {
+    db[modelName].associate(db);
+  }
+});
+
+// ============================================================
+// 4. MANUAL ASOSIASI (OPSIONAL / LEGACY)
+// ============================================================
+// Jika file User.js, Role.js, dll BELUM memiliki method 'associate' di dalamnya,
+// Anda bisa menaruh definisi manual di bawah sini agar aplikasi tidak error.
+// TAPI: Sangat disarankan memindahkan logika ini ke dalam file model masing-masing.
+
+// Contoh cek agar tidak error jika model belum terload
+if (db.User && db.Role) {
+    // Definisi Many-to-Many User <-> Role (Jika belum ada di model masing-masing)
+    db.User.belongsToMany(db.Role, { through: 'user_roles', foreignKey: 'user_id', otherKey: 'role_id' });
+    db.Role.belongsToMany(db.User, { through: 'user_roles', foreignKey: 'role_id', otherKey: 'user_id' });
+}
+
+// Export Database
 db.sequelize = sequelize;
-
-// --- Impor Semua Model Anda ---
-// Pastikan semua model diimpor di sini, termasuk User dan 4 model RBA baru
-db.User = require('./user')(sequelize, DataTypes);
-db.Role = require('./role')(sequelize, DataTypes);
-db.Permission = require('./permission')(sequelize, DataTypes);
-db.UserPermission = require('./userPermission')(sequelize, DataTypes); 
-db.MenuItem=require('./MenuItem')(sequelize,DataTypes);
-db.ProductCategory=require('./productCategory')(sequelize,DataTypes);
-db.Product = require('./product')(sequelize, DataTypes);
-db.ProductStock = require('./productStock')(sequelize, DataTypes);
-db.ProductImage = require('./productImage')(sequelize, DataTypes);
-db.ProductWholesale = require('./productWholesale')(sequelize, DataTypes);
-db.Catalog=require('./catalog')(sequelize, DataTypes);
-db.ProductCatalog=require('./productCatalog')(sequelize, DataTypes);
-//variasi produk
-const variationModels = require('./productVariation')(sequelize, DataTypes);
-db.ProductVariationGroup = variationModels.ProductVariationGroup;
-db.ProductVariationOption = variationModels.ProductVariationOption;
-db.ProductVariant = variationModels.ProductVariant;
-// Anda mungkin juga perlu membuat model untuk tabel pivot user_roles dan role_permissions
-// Jika Anda tidak menggunakan file model terpisah, Sequelize akan membuatnya secara implisit.
-
-
-// --- Definisikan Asosiasi RBA (Kunci Logika Sequelize) ---
-// Hubungan User - Role (Many-to-Many)
-db.User.belongsToMany(db.Role, { through: 'user_roles', foreignKey: 'user_id', otherKey: 'role_id' });
-db.Role.belongsToMany(db.User, { through: 'user_roles', foreignKey: 'role_id', otherKey: 'user_id' });
-
-// Hubungan Role - Permission (Many-to-Many)
-db.Role.belongsToMany(db.Permission, { through: 'role_permissions', foreignKey: 'role_id', otherKey: 'permission_id' });
-db.Permission.belongsToMany(db.Role, { through: 'role_permissions', foreignKey: 'permission_id', otherKey: 'role_id' });
-
-// Hubungan User - Permission (Override Many-to-Many)
-db.User.belongsToMany(db.Permission, { through: db.UserPermission, foreignKey: 'user_id', otherKey: 'permission_id' });
-db.Permission.belongsToMany(db.User, { through: db.UserPermission, foreignKey: 'permission_id', otherKey: 'user_id' });
-
-// Asosiasi langsung ke pivot UserPermission (penting untuk fungsi getEffectivePermissionsFromDB)
-db.UserPermission.belongsTo(db.User, { foreignKey: 'user_id' });
-db.UserPermission.belongsTo(db.Permission, { foreignKey: 'permission_id' });
-
-// B. Relasi Kategori Produk
-if (db.ProductCategory && db.ProductCategory.associate) {
-    db.ProductCategory.associate(db);
-}
-
-// C. Relasi Produk (PENTING: Ini yang sebelumnya hilang)
-if (db.Product && db.Product.associate) {
-    db.Product.associate(db);
-}
-
-if (db.Catalog && db.Catalog.associate) {
-    db.Catalog.associate(db);
-}
-if (db.ProductCatalog && db.ProductCatalog.associate) {
-    db.ProductCatalog.associate(db);
-}
-
-// 1. Relasi Product ke Variation Groups
-db.Product.hasMany(db.ProductVariationGroup, { foreignKey: 'product_id', as: 'VariationGroups', onDelete: 'CASCADE' });
-db.ProductVariationGroup.belongsTo(db.Product, { foreignKey: 'product_id' });
-
-// 2. Relasi Product ke Variants (SKU)
-db.Product.hasMany(db.ProductVariant, { foreignKey: 'product_id', as: 'Variants', onDelete: 'CASCADE' });
-db.ProductVariant.belongsTo(db.Product, { foreignKey: 'product_id' });
-
-
-    
+db.Sequelize = Sequelize;
 
 module.exports = db;

@@ -11,5 +11,11 @@ module.exports = (sequelize, DataTypes) => {
         timestamps: false,
         primaryKey: ['user_id', 'permission_id'] // Compound Primary Key
     });
+
+    UserPermission.associate = (models) => {
+        UserPermission.belongsTo(models.User, { foreignKey: 'user_id' });
+        UserPermission.belongsTo(models.Permission, { foreignKey: 'permission_id' });
+    };
+
     return UserPermission;
 };
