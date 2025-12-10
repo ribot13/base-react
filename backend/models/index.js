@@ -40,6 +40,11 @@ db.ProductImage = require('./productImage')(sequelize, DataTypes);
 db.ProductWholesale = require('./productWholesale')(sequelize, DataTypes);
 db.Catalog=require('./catalog')(sequelize, DataTypes);
 db.ProductCatalog=require('./productCatalog')(sequelize, DataTypes);
+//variasi produk
+const variationModels = require('./productVariation')(sequelize, DataTypes);
+db.ProductVariationGroup = variationModels.ProductVariationGroup;
+db.ProductVariationOption = variationModels.ProductVariationOption;
+db.ProductVariant = variationModels.ProductVariant;
 // Anda mungkin juga perlu membuat model untuk tabel pivot user_roles dan role_permissions
 // Jika Anda tidak menggunakan file model terpisah, Sequelize akan membuatnya secara implisit.
 
@@ -77,6 +82,14 @@ if (db.Catalog && db.Catalog.associate) {
 if (db.ProductCatalog && db.ProductCatalog.associate) {
     db.ProductCatalog.associate(db);
 }
+
+// 1. Relasi Product ke Variation Groups
+db.Product.hasMany(db.ProductVariationGroup, { foreignKey: 'product_id', as: 'VariationGroups', onDelete: 'CASCADE' });
+db.ProductVariationGroup.belongsTo(db.Product, { foreignKey: 'product_id' });
+
+// 2. Relasi Product ke Variants (SKU)
+db.Product.hasMany(db.ProductVariant, { foreignKey: 'product_id', as: 'Variants', onDelete: 'CASCADE' });
+db.ProductVariant.belongsTo(db.Product, { foreignKey: 'product_id' });
 
 
     

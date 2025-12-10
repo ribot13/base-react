@@ -63,3 +63,24 @@ export const fetchCatalogProducts = async (token) => {
     // Gunakan handler yang sama seperti di product.category.service.js
     return response.json(); 
 };
+
+// TAMBAHAN BARU: Simpan Variasi
+export const saveProductVariations = async (token, productId, data) => {
+    const res = await fetch(`${API_URL}/${productId}/variations`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify(data)
+    });
+    return handleResponse(res);
+};
+
+// TAMBAHAN BARU: Ambil Variasi (untuk Edit Mode)
+export const fetchProductVariations = async (token, productId) => {
+    const res = await fetch(`${API_URL}/${productId}/variations`, {
+        headers: { Authorization: `Bearer ${token}` }
+    });
+    return handleResponse(res);
+};

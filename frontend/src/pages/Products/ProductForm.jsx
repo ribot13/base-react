@@ -16,6 +16,8 @@ import {
   createProduct,
   fetchProductById,
   updateProduct,
+  saveProductVariations,
+  fetchProductVariations,
 } from "../../services/product.service";
 import {
   uploadImage,
@@ -25,6 +27,8 @@ import {
   fetchCategories,
   fetchCategoryById,
 } from "../../services/product.category.service";
+import ProductVariationForm from "./components/ProductVariationForm";
+
 import { APP_CONFIG } from "../../config/appConfig";
 
 const ProductForm = () => {
@@ -65,6 +69,13 @@ const ProductForm = () => {
     wholesales: [], // Array [{min_qty, price}]
     images: [],
   });
+
+  const [variationData, setVariationData] = useState({
+    variationGroups: [],
+    variants: [],
+  });
+  // State untuk data awal variasi (Edit Mode)
+  const [initialVariationData, setInitialVariationData] = useState(null);
 
   useEffect(() => {
     const init = async () => {
@@ -120,6 +131,15 @@ const ProductForm = () => {
             wholesales: data.Wholesales || [],
             images: data.Images || [],
           });
+
+          try {
+            const varData = await fetchProductVariations(token, id);
+            if (varData && varData.groups.length > 0) {
+              setInitialVariationData(varData);
+            }
+          } catch (err) {
+            console.log("Belum ada variasi atau gagal load variasi", err);
+          }
         }
       } catch (err) {
         console.error(err);
@@ -143,14 +163,13 @@ const ProductForm = () => {
             formData.category_id
           );
 
-          // Cek apakah mode "Tambah Baru" (bukan Edit)
-          // Atau kita ingin memaksa update nilai default meskipun sedang edit (opsional, hati-hati menimpa data)
-          // Disarankan: Hanya auto-fill jika nilai di form masih 0 atau kosong agar tidak menimpa inputan user yang sudah diketik.
-
           setFormData((prev) => ({
             ...prev,
             // AUTO FILL HARGA (Jika harga di form masih 0, gunakan default kategori)
-            description:prev.description===""?categoryData.description:prev.description,
+            description:
+              prev.description === ""
+                ? categoryData.description
+                : prev.description,
             base_price:
               Number(prev.base_price) === 0
                 ? categoryData.default_base_price
@@ -199,6 +218,11 @@ const ProductForm = () => {
 
     loadCategoryDefaults();
   }, [formData.category_id, token]);
+
+  // Handler yang dikirim ke child component
+  const handleVariationsChange = (data) => {
+    setVariationData(data);
+  };
 
   // 1. Handle File Selection & Upload
   const handleImageUpload = async (e) => {
@@ -259,9 +283,6 @@ const ProductForm = () => {
   };
 
   const handleCancel = async () => {
-    // Jika mode Edit, kita hati-hati. Kita hanya hapus file yang BARU diupload sesi ini.
-    // Jika mode New, semua file di uploadedFilesSession akan dihapus.
-
     if (uploadedFilesSession.length > 0) {
       const toastId = toast.loading("Membersihkan data...");
       // Hapus semua file baru secara paralel
@@ -306,6 +327,7 @@ const ProductForm = () => {
     e.preventDefault();
     setLoading(true);
     try {
+      let productId = id;
       if (isEdit) {
         // MODE EDIT: Panggil updateProduct (PUT)
         await updateProduct(token, id, formData);
@@ -314,6 +336,10 @@ const ProductForm = () => {
         // MODE BARU: Panggil createProduct (POST)
         await createProduct(token, formData);
         toast.success("Produk berhasil dibuat!");
+      }
+      if (variationData.variants && variationData.variants.length > 0) {
+        await saveProductVariations(token, productId, variationData);
+        toast.success("Variasi produk berhasil disimpan!");
       }
       navigate("/admin/products");
     } catch (err) {
@@ -625,6 +651,20 @@ const ProductForm = () => {
                     gram
                   </small>
                 </div>
+              </div>
+            </div>
+          </div>
+          {/* Variasi */}
+          <div className="card shadow-sm border-0">
+            <div className="card-body">
+              <div className="col-12">
+                <ProductVariationForm
+                  onVariationsChange={handleVariationsChange}
+                  initialData={initialVariationData}
+                  // --- PERBAIKAN 2: KIRIM DATA UNTUK VALIDASI ---
+                  parentPrice={formData.sales_price} // Harga Jual
+                  parentSku={formData.sku} // SKU Induk
+                />
               </div>
             </div>
           </div>
