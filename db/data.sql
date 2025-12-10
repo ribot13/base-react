@@ -11,7 +11,7 @@
  Target Server Version : 80044 (8.0.44)
  File Encoding         : 65001
 
- Date: 08/12/2025 21:42:04
+ Date: 10/12/2025 09:06:25
 */
 
 SET NAMES utf8mb4;
@@ -21,13 +21,14 @@ SET FOREIGN_KEY_CHECKS = 0;
 -- Records of catalog
 -- ----------------------------
 BEGIN;
+INSERT INTO `catalog` (`id`, `name`, `description`, `status`, `created_at`, `updated_at`) VALUES (1, 'Summer Vibes', 'Katalog untuk produk-produk yang cocok di musim panas', 'active', '2025-12-09 02:24:04', '2025-12-09 02:24:04'), (2, 'Back To School', 'kembali ke sekolah yang mana itu sangat asyik', 'active', '2025-12-09 02:24:35', '2025-12-09 02:25:02');
 COMMIT;
 
 -- ----------------------------
 -- Records of menu_items
 -- ----------------------------
 BEGIN;
-INSERT INTO `menu_items` (`id`, `title`, `path`, `required_permission`, `icon_name`, `parent_id`, `order_index`, `is_active`, `show_in_menu`, `created_at`, `updated_at`) VALUES (1, 'Pesanan', NULL, NULL, 'FiShoppingCart', NULL, 10, 1, 1, '2025-11-30 14:11:27', '2025-12-03 09:20:14'), (2, 'Laporan', NULL, 'read-report', 'FiBarChart2', NULL, 20, 1, 1, '2025-11-30 14:11:27', '2025-12-03 09:20:14'), (3, 'Pengaturan Sistem', '', 'manage-system', 'FiSettings', NULL, 100, 1, 1, '2025-11-30 14:11:27', '2025-12-03 09:20:14'), (4, 'Pesanan Baru', '/orders', 'read-order', 'FiShoppingBag', 1, 11, 1, 1, '2025-11-30 14:13:23', '2025-12-03 09:20:14'), (5, 'Pengiriman ', '/orders/shipping', 'read-order-shipping', 'FiTruck', 1, 12, 1, 1, '2025-11-30 14:14:30', '2025-12-03 09:20:14'), (7, 'Laporan Keuangan', '/reports/keuangan', 'read-report-keuangan', 'FiFileText', 2, 21, 1, 1, '2025-11-30 14:15:33', '2025-12-03 09:20:14'), (9, 'Administrasi Menu', '/admin/menu', 'manage-menu', 'FiList', 3, 101, 1, 1, '2025-11-30 19:58:35', '2025-12-03 09:20:14'), (10, 'Administrasi User', '/admin/users', 'manage-users', 'FiUsers', 3, 102, 1, 1, '2025-12-01 07:10:48', '2025-12-03 15:11:54'), (11, 'Riwayat Pesanan', '/orders/history', 'read-history', 'FiDatabase', 1, 13, 1, 1, '2025-12-02 12:17:29', '2025-12-03 09:20:14'), (12, 'Riwayat Posting', '/orders/posting-history', 'read-posting-history', 'FiArchive', 1, 13, 1, 1, '2025-12-02 12:20:23', '2025-12-03 09:20:14'), (13, 'Laporan Pesanan', '/reports/all', 'read-report', 'FiCircle', 2, 22, 1, 1, '2025-12-02 13:48:12', '2025-12-03 09:20:14'), (24, 'Produk', NULL, NULL, 'FiBox', NULL, 5, 1, 1, '2025-12-03 01:01:38', '2025-12-03 14:49:59'), (25, 'List Produk', '/admin/products', NULL, 'FiGift', 24, 1, 1, 1, '2025-12-03 01:04:13', '2025-12-08 09:01:16'), (29, 'Kategori', '/admin/products/category', NULL, 'FiGrid', 24, 2, 1, 1, '2025-12-03 14:49:56', '2025-12-08 08:11:04');
+INSERT INTO `menu_items` (`id`, `title`, `path`, `required_permission`, `icon_name`, `parent_id`, `order_index`, `is_active`, `show_in_menu`, `created_at`, `updated_at`) VALUES (1, 'Pesanan', NULL, NULL, 'FiShoppingCart', NULL, 10, 1, 1, '2025-11-30 14:11:27', '2025-12-03 09:20:14'), (2, 'Laporan', NULL, 'read-report', 'FiBarChart2', NULL, 20, 1, 1, '2025-11-30 14:11:27', '2025-12-03 09:20:14'), (3, 'Pengaturan Sistem', '', 'manage-system', 'FiSettings', NULL, 100, 1, 1, '2025-11-30 14:11:27', '2025-12-03 09:20:14'), (4, 'Pesanan Baru', '/orders', 'read-order', 'FiShoppingBag', 1, 11, 1, 1, '2025-11-30 14:13:23', '2025-12-03 09:20:14'), (5, 'Pengiriman ', '/orders/shipping', 'read-order-shipping', 'FiTruck', 1, 12, 1, 1, '2025-11-30 14:14:30', '2025-12-03 09:20:14'), (7, 'Laporan Keuangan', '/reports/keuangan', 'read-report-keuangan', 'FiFileText', 2, 21, 1, 1, '2025-11-30 14:15:33', '2025-12-03 09:20:14'), (9, 'Administrasi Menu', '/admin/menu', 'manage-menu', 'FiList', 3, 101, 1, 1, '2025-11-30 19:58:35', '2025-12-03 09:20:14'), (10, 'Administrasi User', '/admin/users', 'manage-users', 'FiUsers', 3, 102, 1, 1, '2025-12-01 07:10:48', '2025-12-03 15:11:54'), (11, 'Riwayat Pesanan', '/orders/history', 'read-history', 'FiDatabase', 1, 13, 1, 1, '2025-12-02 12:17:29', '2025-12-03 09:20:14'), (12, 'Riwayat Posting', '/orders/posting-history', 'read-posting-history', 'FiArchive', 1, 13, 1, 1, '2025-12-02 12:20:23', '2025-12-03 09:20:14'), (13, 'Laporan Pesanan', '/reports/all', 'read-report', 'FiCircle', 2, 22, 1, 1, '2025-12-02 13:48:12', '2025-12-03 09:20:14'), (24, 'Produk', NULL, NULL, 'FiBox', NULL, 5, 1, 1, '2025-12-03 01:01:38', '2025-12-03 14:49:59'), (25, 'List Produk', '/admin/products', NULL, 'FiGift', 24, 1, 1, 1, '2025-12-03 01:04:13', '2025-12-08 09:01:16'), (29, 'Kategori', '/admin/products/category', NULL, 'FiGrid', 24, 2, 1, 1, '2025-12-03 14:49:56', '2025-12-08 08:11:04'), (30, 'Katalog', '/admin/products/catalogs', NULL, 'FiLayers', 24, 3, 1, 1, '2025-12-09 00:21:01', '2025-12-09 00:21:01');
 COMMIT;
 
 -- ----------------------------
@@ -41,6 +42,7 @@ COMMIT;
 -- Records of product_catalog
 -- ----------------------------
 BEGIN;
+INSERT INTO `product_catalog` (`id`, `product_id`, `catalog_id`) VALUES (1, 7, 1), (3, 2, 2), (4, 6, 1);
 COMMIT;
 
 -- ----------------------------
@@ -61,7 +63,25 @@ COMMIT;
 -- Records of product_stocks
 -- ----------------------------
 BEGIN;
-INSERT INTO `product_stocks` (`id`, `product_id`, `sku`, `stock_current`, `stock_minimum`, `stock_booked`) VALUES (2, 2, 'PK0001', 10, 5, 0), (6, 6, 'TS001', 5, 2, 0), (7, 7, 'NR001', 5, 5, 0);
+INSERT INTO `product_stocks` (`id`, `product_id`, `sku`, `stock_current`, `stock_minimum`, `stock_booked`) VALUES (2, 2, 'PK0001', 10, 5, 0), (6, 6, 'TS001', 5, 2, 0), (7, 7, 'NR001', 5, 5, 0), (10, 10, 'PR000', 0, 0, 0);
+COMMIT;
+
+-- ----------------------------
+-- Records of product_variants
+-- ----------------------------
+BEGIN;
+COMMIT;
+
+-- ----------------------------
+-- Records of product_variation_groups
+-- ----------------------------
+BEGIN;
+COMMIT;
+
+-- ----------------------------
+-- Records of product_variation_options
+-- ----------------------------
+BEGIN;
 COMMIT;
 
 -- ----------------------------
@@ -75,7 +95,7 @@ COMMIT;
 -- Records of products
 -- ----------------------------
 BEGIN;
-INSERT INTO `products` (`id`, `category_id`, `name`, `slug`, `description`, `visibility`, `base_price`, `sales_price`, `max_price`, `is_preorder`, `po_process_time`, `po_dp_requirement`, `po_dp_type`, `po_dp_value`, `weight`, `length`, `width`, `height`, `volumetric_weight`, `seo_title`, `seo_description`, `created_at`, `updated_at`) VALUES (2, 3, 'Kala', 'kala', 'Tas Selempang mini untuk daily driver. Bisa naro hp', 'public', 78000.00, 125000.00, 149000.00, 0, 0, 'none', 'fixed', 0.00, 350, 24, 4, 12, 1, 'Kala', 'Tas Selempang mini untuk daily driver', '2025-12-08 10:11:02', '2025-12-08 10:20:47'), (6, 7, 'Almas', 'almas', 'Tas selempang mini bisa shoulder juga', 'public', 69000.00, 135000.00, 159000.00, 0, 0, 'none', 'fixed', 0.00, 250, 30, 5, 12, 1, 'Almas', 'Tas selempang mini bisa shoulder juga', '2025-12-08 10:46:02', '2025-12-08 10:46:02'), (7, 11, 'Agery', 'agery', 'Tas selempang yang bagus', 'public', 78500.00, 149000.00, 179000.00, 0, 0, 'none', 'fixed', 0.00, 350, 24, 6, 28, 1, 'Agery', 'Tas selempang yang bagus', '2025-12-08 13:46:00', '2025-12-08 13:46:00');
+INSERT INTO `products` (`id`, `category_id`, `name`, `slug`, `description`, `visibility`, `base_price`, `sales_price`, `max_price`, `is_preorder`, `po_process_time`, `po_dp_requirement`, `po_dp_type`, `po_dp_value`, `weight`, `length`, `width`, `height`, `volumetric_weight`, `seo_title`, `seo_description`, `created_at`, `updated_at`) VALUES (2, 3, 'Kala', 'kala', 'Tas Selempang mini untuk daily driver. Bisa naro hp', 'public', 78000.00, 125000.00, 149000.00, 0, 0, 'none', 'fixed', 0.00, 350, 24, 4, 12, 1, 'Kala', 'Tas Selempang mini untuk daily driver', '2025-12-08 10:11:02', '2025-12-08 10:20:47'), (6, 7, 'Almas', 'almas', 'Tas selempang mini bisa shoulder juga', 'public', 69000.00, 135000.00, 159000.00, 0, 0, 'none', 'fixed', 0.00, 250, 30, 5, 12, 1, 'Almas', 'Tas selempang mini bisa shoulder juga', '2025-12-08 10:46:02', '2025-12-08 10:46:02'), (7, 11, 'Agery', 'agery', 'Tas selempang yang bagus', 'public', 78500.00, 149000.00, 179000.00, 0, 0, 'none', 'fixed', 0.00, 350, 24, 6, 28, 1, 'Agery', 'Tas selempang yang bagus', '2025-12-08 13:46:00', '2025-12-09 07:37:54'), (10, 1, 'Poke Reborn Series', 'poke-reborn-series', 'tas selempang aja', 'public', 69000.00, 135000.00, 149000.00, 0, 0, 'none', 'fixed', 0.00, 300, 24, 4, 13, 1, 'Poke Reborn Series', 'tas selempang aja', '2025-12-09 10:39:53', '2025-12-09 10:39:53');
 COMMIT;
 
 -- ----------------------------
