@@ -106,3 +106,31 @@ export const adjustStock = async (token, productId, data) => {
     if (!response.ok) throw new Error(result.message || "Gagal menyesuaikan stok");
     return result;
 };
+
+const STOCK_API_URL = `${APP_CONFIG.API_BASE_URL}/stock-management`;
+
+export const getInventoryList = async (token, params = {}) => {
+    const query = new URLSearchParams(params).toString();
+    const response = await fetch(`${STOCK_API_URL}?${query}`, {
+        headers: { Authorization: `Bearer ${token}` }
+    });
+    if (!response.ok) {
+        const result = await response.json();
+        throw new Error(result.message || "Gagal memuat daftar inventaris.");
+    }
+    return await response.json();
+};
+
+export const adjustInlineStock = async (token, data) => {
+    const response = await fetch(`${STOCK_API_URL}/adjust`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify(data)
+    });
+    const result = await response.json();
+    if (!response.ok) throw new Error(result.message || "Gagal menyesuaikan stok.");
+    return result;
+};

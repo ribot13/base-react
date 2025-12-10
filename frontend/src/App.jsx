@@ -25,6 +25,7 @@ import ProductForm from "./pages/Products/ProductForm.jsx";
 import CatalogIndex from "./pages/Products/Catalog.jsx";
 import CatalogForm from "./pages/Products/CatalogForm.jsx";
 import CatalogDetail from "./pages/Products/CatalogDetail.jsx";
+import StockManagement from "./pages/Products/StockManagement.jsx";
 
 // Guard
 import ProtectedRoute from "./components/ProtectedRoute.jsx";
@@ -95,6 +96,8 @@ const App = () => (
               element={<CatalogForm />}
             />
             <Route path="/admin/products/catalogs/:id" element={<CatalogDetail />} />
+
+            <Route path="/admin/products/stock-management" element={<StockManagement />} />
 
             {/* Halaman Admin */}
             <Route path="/admin/menu" element={<MenuAdmin />} />

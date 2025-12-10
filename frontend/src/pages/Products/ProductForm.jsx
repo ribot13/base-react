@@ -246,7 +246,7 @@ const ProductForm = () => {
         variants: variationData.variants
       };
       
-      console.log("FINAL PAYLOAD:", payload); // Debugging
+      //console.log("FINAL PAYLOAD:", payload); // Debugging
 
       let productId = id;
 

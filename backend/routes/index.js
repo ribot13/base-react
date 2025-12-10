@@ -7,6 +7,7 @@ const roleRoutes = require('./role.routes');
 const productCategoryRoutes=require('./product.category.routes');
 const productRoutes=require('./product.routes');
 const catalogRoutes=require('./catalog.routes');
+const stockRoutes = require('./stock.management.routes');
 
 /**
  * Fungsi untuk mendaftarkan semua rute ke instance Express app.
@@ -22,6 +23,7 @@ module.exports = (app) => {
         ['/api/roles', roleRoutes],
         ['/api/products/category', productCategoryRoutes],
         ['/api/products', productRoutes],
+        ['/api/stock-management', stockRoutes],
         ['/api/catalogs', catalogRoutes],
     ];
 
