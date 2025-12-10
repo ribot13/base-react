@@ -1,6 +1,7 @@
 // backend/controllers/product.controller.js
 const fs = require('fs');
 const path = require('path');
+const StockService = require('../services/stock.service');
 const {
     Product,
     ProductStock,
@@ -10,6 +11,7 @@ const {
     ProductVariationGroup,
     ProductVariationOption,
     ProductVariant,
+    ProductStockMovement,
     sequelize
 } = require('../models');
 const { Op } = require('sequelize');
@@ -49,9 +51,52 @@ exports.findAll = async (req, res) => {
         const products = await Product.findAll({
             include: [
                 { model: ProductCategory, as: 'Category', attributes: ['name'] },
+                
+                // Include Stock (Penting untuk sorting SKU induk)
                 { model: ProductStock, as: 'Stock', attributes: ['sku', 'stock_current'] },
+                
                 { model: ProductImage, as: 'Images', where: { is_main: true }, required: false },
-                // Include Group & Options agar Frontend tahu metadata warna/gambarnya
+                
+                // Include Variation Group (Untuk Metadata Warna/Gambar)
+                {
+                    model: ProductVariationGroup,
+                    as: 'VariationGroups',
+                    include: [
+                        { model: ProductVariationOption, as: 'Options' }
+                    ]
+                },
+                
+                // Include Variants (Untuk Expandable Row)
+                { 
+                    model: ProductVariant, 
+                    as: 'Variants',
+                    attributes: ['id', 'sku', 'price', 'stock', 'combination_json'] 
+                }
+            ],
+            
+            // === BAGIAN INI YANG DIUBAH (SORTING) ===
+            order: [
+                // 1. Urutkan Produk Utama berdasarkan SKU (A-Z)
+                // Karena SKU ada di tabel relasi 'Stock', syntax-nya: [{model, as}, column, direction]
+                [ { model: ProductStock, as: 'Stock' }, 'sku', 'ASC' ],
+
+                // 2. Urutkan List Variasi (anak) berdasarkan SKU juga
+                [ { model: ProductVariant, as: 'Variants' }, 'sku', 'ASC' ]
+            ]
+        });
+        res.json(products);
+    } catch (err) { res.status(500).json({ message: err.message }); }
+};
+
+exports.findOne = async (req, res) => {
+    try {
+        const product = await Product.findByPk(req.params.id, {
+            include: [
+                'Category', 
+                'Stock', 
+                'Images', 
+                'Wholesales',
+                // === TAMBAHKAN INI AGAR VARIASI MUNCUL DI EDIT FORM ===
                 {
                     model: ProductVariationGroup,
                     as: 'VariationGroups',
@@ -61,20 +106,10 @@ exports.findAll = async (req, res) => {
                 },
                 { 
                     model: ProductVariant, 
-                    as: 'Variants',
-                    attributes: ['id', 'sku', 'price', 'stock', 'combination_json'] 
+                    as: 'Variants' 
                 }
-            ],
-            order: [['created_at', 'DESC']]
-        });
-        res.json(products);
-    } catch (err) { res.status(500).json({ message: err.message }); }
-};
-
-exports.findOne = async (req, res) => {
-    try {
-        const product = await Product.findByPk(req.params.id, {
-            include: ['Category', 'Stock', 'Images', 'Wholesales']
+                // =======================================================
+            ]
         });
         if (!product) return res.status(404).json({ message: 'Produk tidak ditemukan' });
         res.json(product);
@@ -288,5 +323,99 @@ exports.delete = async (req, res) => {
         res.json({ message: 'Produk dan file terkait berhasil dihapus' });
     } catch (err) { 
         res.status(500).json({ message: err.message }); 
+    }
+};
+
+// ==========================================
+// 6. GET STOCK HISTORY (RIWAYAT STOK)
+// ==========================================
+exports.getStockHistory = async (req, res) => {
+    try {
+        const { id } = req.params; // Product ID
+        
+        const history = await ProductStockMovement.findAll({
+            where: { product_id: id },
+            include: [
+                { 
+                    model: ProductVariant, 
+                    as: 'Variant', // Pastikan alias ini sama dengan di productStockMovement.js
+                    attributes: ['sku', 'combination_json'] 
+                }
+            ],
+            // Gunakan 'createdAt' (default Sequelize) atau 'created_at' (jika Anda pakai underscore: true)
+            order: [['createdAt', 'DESC']] 
+        });
+
+        res.json(history);
+    } catch (err) {
+        // === PENTING: LOGGING DETAIL ERROR DI TERMINAL SERVER ===
+        console.error("CRITICAL BACKEND ERROR | GET STOCK HISTORY:", err.name);
+        console.error("Message:", err.message);
+        // Jika ini adalah error database, err.sql akan menampilkan query yang gagal
+        if (err.sql) console.error("SQL:", err.sql); 
+        
+        // Kirim error generik 500 ke frontend
+        res.status(500).json({ message: "Gagal mengambil riwayat stok dari server. Lihat log backend untuk detail." });
+    }
+};
+
+// ==========================================
+// 7. STOCK ADJUSTMENT (OPNAME / KOREKSI)
+// ==========================================
+exports.adjustStock = async (req, res) => {
+    const t = await sequelize.transaction();
+    try {
+        const { id } = req.params; // Product ID
+        const { variant_id, actual_stock, note } = req.body;
+
+        // Validasi Input
+        if (actual_stock === undefined || actual_stock === null || actual_stock < 0) {
+            throw new Error("Stok fisik (actual_stock) harus diisi dan tidak boleh minus.");
+        }
+
+        let currentStock = 0;
+        let qtyChange = 0;
+
+        // A. HITUNG SELISIH (Diff)
+        if (variant_id) {
+            // Kasus Produk Variasi
+            const variant = await ProductVariant.findByPk(variant_id, { transaction: t });
+            if (!variant) throw new Error("Varian tidak ditemukan.");
+            currentStock = variant.stock;
+        } else {
+            // Kasus Produk Simple
+            const pStock = await ProductStock.findOne({ where: { product_id: id }, transaction: t });
+            currentStock = pStock ? pStock.stock_current : 0;
+        }
+
+        // Rumus: Selisih = Stok Fisik - Stok Sistem
+        // Contoh: Fisik 50, Sistem 45. Selisih = +5 (Masuk)
+        // Contoh: Fisik 40, Sistem 45. Selisih = -5 (Keluar/Hilang)
+        qtyChange = Number(actual_stock) - Number(currentStock);
+
+        if (qtyChange === 0) {
+            await t.rollback();
+            return res.status(400).json({ message: "Stok fisik sama dengan stok sistem. Tidak ada perubahan." });
+        }
+
+        // B. PANGGIL STOCK SERVICE
+        await StockService.recordMovement({
+            productId: id,
+            variantId: variant_id || null,
+            type: 'adjustment', // Tipe khusus Opname
+            qtyChange: qtyChange,
+            referenceType: 'OPNAME',
+            description: note || 'Stock Opname Manual',
+            userId: req.userId, // Dari middleware auth
+            transaction: t
+        });
+
+        await t.commit();
+        res.json({ message: "Stok berhasil disesuaikan.", adjustment: qtyChange, current: actual_stock });
+
+    } catch (err) {
+        await t.rollback();
+        console.error(err);
+        res.status(500).json({ message: err.message });
     }
 };

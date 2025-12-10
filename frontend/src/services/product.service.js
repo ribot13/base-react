@@ -84,3 +84,25 @@ export const fetchProductVariations = async (token, productId) => {
     });
     return handleResponse(res);
 };
+
+export const getStockHistory = async (token, productId) => {
+    const response = await fetch(`${API_URL}/${productId}/stock-history`, {
+        headers: { Authorization: `Bearer ${token}` }
+    });
+    if (!response.ok) throw new Error("Gagal mengambil riwayat stok");
+    return await response.json();
+};
+
+export const adjustStock = async (token, productId, data) => {
+    const response = await fetch(`${API_URL}/${productId}/adjust-stock`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify(data)
+    });
+    const result = await response.json();
+    if (!response.ok) throw new Error(result.message || "Gagal menyesuaikan stok");
+    return result;
+};

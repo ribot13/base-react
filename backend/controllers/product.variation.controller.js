@@ -27,7 +27,7 @@ exports.getVariations = async (req, res) => {
             where: { product_id: productId },
             include: [{ model: ProductVariationOption, as: 'Options' }]
         });
-        const variants = await ProductVariant.findAll({ where: { product_id: productId } });
+        const variants = await ProductVariant.findAll({ where: { product_id: productId }});
 
         res.status(200).json({ groups, variants });
     } catch (error) {

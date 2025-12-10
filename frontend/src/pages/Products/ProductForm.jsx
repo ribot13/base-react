@@ -1,3 +1,5 @@
+/* eslint-disable no-unused-vars */
+/* eslint-disable react-hooks/exhaustive-deps */
 import React, { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { toast } from "react-toastify";
@@ -9,15 +11,15 @@ import {
   FiUpload,
   FiX,
   FiCheckCircle,
-  FiCircle,
+  FiRefreshCw, // Icon untuk tab Variasi/Stok
+  FiBox,       // Icon untuk tab History
 } from "react-icons/fi";
 import { useAuth } from "../../context/AuthContext";
 import {
   createProduct,
   fetchProductById,
   updateProduct,
-  saveProductVariations,
-  fetchProductVariations,
+  //saveProductVariations, // Opsional jika mau save terpisah, tapi kita pakai logic gabungan
 } from "../../services/product.service";
 import {
   uploadImage,
@@ -25,9 +27,11 @@ import {
 } from "../../services/upload.service";
 import {
   fetchCategories,
-  fetchCategoryById,
 } from "../../services/product.category.service";
+
+// IMPORT KOMPONEN TAB LAINNYA
 import ProductVariationForm from "./components/ProductVariationForm";
+import StockHistoryTab from "./components/StockHistoryTab";
 
 import { APP_CONFIG } from "../../config/appConfig";
 
@@ -41,7 +45,10 @@ const ProductForm = () => {
   const [categories, setCategories] = useState([]);
   const [uploadedFilesSession, setUploadedFilesSession] = useState([]);
 
-  // State Utama
+  // --- STATE TAB NAVIGATION ---
+  const [activeTab, setActiveTab] = useState("info"); // 'info', 'variation', 'stock'
+
+  // State Utama Data Produk
   const [formData, setFormData] = useState({
     name: "",
     category_id: "",
@@ -66,777 +73,666 @@ const ProductForm = () => {
     slug: "",
     seo_title: "",
     seo_description: "",
-    wholesales: [], // Array [{min_qty, price}]
-    images: [],
+    images: [], // { image_path, is_main }
+    wholesales: [], // { min_qty, price }
   });
 
+  // State Data Variasi
   const [variationData, setVariationData] = useState({
-    variationGroups: [],
-    variants: [],
+    groups: [],   // Data Grup (Warna, Ukuran)
+    variants: []  // Data SKU Akhir
   });
-  // State untuk data awal variasi (Edit Mode)
-  const [initialVariationData, setInitialVariationData] = useState(null);
 
+  // Load Data Awal
   useEffect(() => {
-    const init = async () => {
-      setLoading(true);
-      try {
-        // 1. Ambil Data Kategori (untuk dropdown)
-        const cats = await fetchCategories(token);
-        setCategories(cats);
+    loadCategories();
+    if (isEdit) {
+      loadProductData();
+    }
+  }, [id]);
 
-        // 2. Jika Mode Edit, Ambil Detail Produk
-        if (isEdit) {
-          const data = await fetchProductById(token, id);
-
-          // 3. Masukkan data ke Form (Mapping Data)
-          setFormData({
-            name: data.name,
-            category_id: data.category_id || "",
-            description: data.description || "",
-            visibility: data.visibility,
-
-            // Harga
-            // Pastikan dikonversi ke angka agar tidak error di input type="number"
-            base_price: parseFloat(data.base_price) || 0,
-            sales_price: parseFloat(data.sales_price) || 0,
-            max_price: parseFloat(data.max_price) || 0,
-
-            // Inventaris (Diambil dari relasi Stock)
-            sku: data.Stock?.sku || "",
-            stock_current: data.Stock?.stock_current || 0,
-            stock_minimum: data.Stock?.stock_minimum || 0,
-
-            // Dimensi
-            weight: data.weight || 0,
-            length: data.length || 0,
-            width: data.width || 0,
-            height: data.height || 0,
-            volumetric_weight: data.volumetric_weight || 0,
-
-            // Preorder
-            is_preorder: data.is_preorder,
-            po_process_time: data.po_process_time || 0,
-            po_dp_requirement: data.po_dp_requirement || "none",
-            po_dp_type: data.po_dp_type || "fixed",
-            po_dp_value: parseFloat(data.po_dp_value) || 0,
-
-            // SEO
-            slug: data.slug || "",
-            seo_title: data.seo_title || "",
-            seo_description: data.seo_description || "",
-
-            // Array (Grosir & Gambar)
-            // Pastikan Wholesales dan Images ada di include controller backend
-            wholesales: data.Wholesales || [],
-            images: data.Images || [],
-          });
-
-          try {
-            const varData = await fetchProductVariations(token, id);
-            if (varData && varData.groups.length > 0) {
-              setInitialVariationData(varData);
-            }
-          } catch (err) {
-            console.log("Belum ada variasi atau gagal load variasi", err);
-          }
-        }
-      } catch (err) {
-        console.error(err);
-        toast.error("Gagal memuat data produk: " + err.message);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    init();
-  }, [id, token, isEdit]);
-
-  useEffect(() => {
-    const loadCategoryDefaults = async () => {
-      // Jalankan hanya jika category_id terpilih
-      if (formData.category_id) {
-        try {
-          // Ambil data detail kategori berdasarkan ID
-          const categoryData = await fetchCategoryById(
-            token,
-            formData.category_id
-          );
-
-          setFormData((prev) => ({
-            ...prev,
-            // AUTO FILL HARGA (Jika harga di form masih 0, gunakan default kategori)
-            description:
-              prev.description === ""
-                ? categoryData.description
-                : prev.description,
-            base_price:
-              Number(prev.base_price) === 0
-                ? categoryData.default_base_price
-                : prev.base_price,
-            sales_price:
-              Number(prev.sales_price) === 0
-                ? categoryData.default_sales_price
-                : prev.sales_price,
-            max_price:
-              Number(prev.max_price) === 0
-                ? categoryData.default_max_price
-                : prev.max_price,
-
-            // AUTO FILL DIMENSI
-            length:
-              Number(prev.length) === 0
-                ? categoryData.default_length
-                : prev.length,
-            width:
-              Number(prev.width) === 0
-                ? categoryData.default_width
-                : prev.width,
-            height:
-              Number(prev.height) === 0
-                ? categoryData.default_height
-                : prev.height,
-            weight:
-              Number(prev.weight) === 0
-                ? categoryData.default_weight
-                : prev.weight,
-
-            // Berat Volumetrik (Langsung ambil atau hitung ulang)
-            volumetric_weight:
-              Number(prev.volumetric_weight) === 0
-                ? categoryData.default_volumetric_weight
-                : prev.volumetric_weight,
-          }));
-
-          // Opsional: Beri notifikasi kecil (Toast)
-          // toast.info("Harga dan Dimensi disesuaikan dengan kategori");
-        } catch (error) {
-          console.error("Gagal memuat default kategori", error);
-        }
-      }
-    };
-
-    loadCategoryDefaults();
-  }, [formData.category_id, token]);
-
-  // Handler yang dikirim ke child component
-  const handleVariationsChange = (data) => {
-    setVariationData(data);
-  };
-
-  // 1. Handle File Selection & Upload
-  const handleImageUpload = async (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-    // ... validasi size ...
-
+  const loadCategories = async () => {
     try {
-      const res = await uploadImage(token, file);
-
-      // Catat URL ini sebagai file baru session ini
-      setUploadedFilesSession((prev) => [...prev, res.url]);
-
-      const newImage = {
-        image_path: res.url,
-        is_main: formData.images.length === 0,
-      };
-      setFormData((prev) => ({ ...prev, images: [...prev.images, newImage] }));
-      toast.success("Gambar terupload");
+      const data = await fetchCategories(token);
+      setCategories(data);
     } catch (error) {
-      toast.error(error.message);
-    } finally {
-      e.target.value = null;
+      console.error(error);
+      toast.error("Gagal memuat kategori");
     }
   };
 
-  // 2. Hapus Gambar
-  const removeImage = async (index) => {
-    const imageToDelete = formData.images[index];
-
-    // Hapus dari state UI dulu agar responsif
-    setFormData((prev) => {
-      const newImages = [...prev.images];
-      const wasMain = newImages[index].is_main;
-      newImages.splice(index, 1);
-      if (wasMain && newImages.length > 0) newImages[0].is_main = true;
-      return { ...prev, images: newImages };
-    });
-
-    // Panggil API Hapus di background
-    await deleteImageFromServer(token, imageToDelete.image_path);
-
-    // Hapus juga dari tracking session jika ada
-    setUploadedFilesSession((prev) =>
-      prev.filter((url) => url !== imageToDelete.image_path)
-    );
-  };
-
-  // 3. Set Gambar Utama
-  const setMainImage = (index) => {
-    setFormData((prev) => {
-      const newImages = prev.images.map((img, i) => ({
-        ...img,
-        is_main: i === index, // Hanya index yang dipilih yang true
-      }));
-      return { ...prev, images: newImages };
-    });
-  };
-
-  const handleCancel = async () => {
-    if (uploadedFilesSession.length > 0) {
-      const toastId = toast.loading("Membersihkan data...");
-      // Hapus semua file baru secara paralel
-      await Promise.all(
-        uploadedFilesSession.map((url) => deleteImageFromServer(token, url))
-      );
-      toast.dismiss(toastId);
-    }
-    navigate("/admin/products");
-  };
-
-  const handleChange = (e) => {
-    const { name, value, type, checked } = e.target;
-    const val = type === "checkbox" ? checked : value;
-    setFormData((prev) => ({ ...prev, [name]: val }));
-  };
-
-  // Auto Volumetric
-  useEffect(() => {
-    const vol = (formData.length * formData.width * formData.height) / 6000;
-    setFormData((prev) => ({ ...prev, volumetric_weight: Math.ceil(vol) }));
-  }, [formData.length, formData.width, formData.height]);
-
-  // Handle Wholesale Dynamic Fields
-  const addWholesale = () =>
-    setFormData((prev) => ({
-      ...prev,
-      wholesales: [...prev.wholesales, { min_qty: 1, price: 0 }],
-    }));
-  const removeWholesale = (idx) => {
-    const newArr = [...formData.wholesales];
-    newArr.splice(idx, 1);
-    setFormData((prev) => ({ ...prev, wholesales: newArr }));
-  };
-  const changeWholesale = (idx, field, val) => {
-    const newArr = [...formData.wholesales];
-    newArr[idx][field] = val;
-    setFormData((prev) => ({ ...prev, wholesales: newArr }));
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  const loadProductData = async () => {
     setLoading(true);
     try {
-      console.log("Variation Data State:", variationData);
-      // GABUNGKAN DATA: Form Data + Variation Data
-      const payload = {
-        ...formData, // Data produk, harga, gambar, dll
-        variationGroups: variationData.variationGroups, // Data Group Variasi
-        variants: variationData.variants // Data SKU Variasi
-      };
+      const data = await fetchProductById(token, id);
+      
+      // Mapping data produk ke form
+      setFormData({
+        name: data.name,
+        category_id: data.category_id || "",
+        description: data.description || "",
+        visibility: data.visibility,
+        base_price: Number(data.base_price),
+        sales_price: Number(data.sales_price),
+        max_price: Number(data.max_price),
+        sku: data.Stock?.sku || "",
+        stock_current: data.Stock?.stock_current || 0,
+        stock_minimum: data.Stock?.stock_minimum || 0,
+        weight: data.weight,
+        length: data.length,
+        width: data.width,
+        height: data.height,
+        volumetric_weight: data.volumetric_weight,
+        is_preorder: data.is_preorder,
+        po_process_time: data.po_process_time,
+        po_dp_requirement: data.po_dp_requirement,
+        po_dp_type: data.po_dp_type,
+        po_dp_value: data.po_dp_value,
+        slug: data.slug,
+        seo_title: data.seo_title,
+        seo_description: data.seo_description,
+        images: data.Images || [],
+        wholesales: data.Wholesales || [],
+      });
 
-      console.log("FINAL PAYLOAD:", payload);
-
-      if (isEdit) {
-        // --- MODE EDIT (Update) ---
-        // Untuk update, logic-nya mungkin masih terpisah atau mau digabung juga terserah backend update-nya.
-        // Asumsi saat ini kita hanya memperbaiki CREATE dulu.
-        await updateProduct(token, id, payload); 
-        
-        // Jika mode edit, variasi mungkin perlu disimpan terpisah atau backend updateProduct juga harus diupdate.
-        // Agar aman untuk EDIT, kita tetap panggil saveProductVariations terpisah jika backend update belum support transaction gabungan.
-        if (variationData.variants && variationData.variants.length > 0) {
-             await saveProductVariations(token, id, variationData);
-        }
-
-        toast.success("Produk berhasil diperbarui!");
-      } else {
-        // --- MODE BARU (CREATE) - SUDAH MENGGUNAKAN TRANSACTION ---
-        // Kita kirim payload yang sudah berisi variasi.
-        // Backend 'createProduct' yang baru akan menangani semuanya.
-        await createProduct(token, payload);
-        
-        toast.success("Produk dan Variasi berhasil dibuat!");
+      // Mapping data variasi untuk ProductVariationForm
+      // Backend mengirim 'VariationGroups' dan 'Variants'
+      if (data.VariationGroups || data.Variants) {
+          setVariationData({
+             groups: data.VariationGroups || [],
+             variants: data.Variants || []
+          });
       }
 
+    } catch (error) {
+      console.error(error);
+      toast.error("Gagal memuat data produk");
       navigate("/admin/products");
-    } catch (err) {
-      console.error(err);
-      toast.error(err.message);
     } finally {
       setLoading(false);
     }
   };
 
+  // --- HANDLERS FORM UTAMA ---
+  const handleChange = (e) => {
+    const { name, value, type, checked } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      [name]: type === "checkbox" ? checked : value,
+    }));
+  };
+
+  // --- LOGIC IMAGE UPLOAD ---
+  const handleImageUpload = async (e) => {
+    const files = Array.from(e.target.files);
+    if (files.length === 0) return;
+
+    const toastId = toast.loading("Mengupload gambar...");
+    try {
+      const newImages = [...formData.images];
+      for (const file of files) {
+        const response = await uploadImage(token, file);
+        newImages.push({ image_path: response.url, is_main: newImages.length === 0 });
+        
+        // Simpan path session utk cleanup jika batal simpan (opsional)
+        setUploadedFilesSession((prev) => [...prev, response.url]);
+      }
+      setFormData((prev) => ({ ...prev, images: newImages }));
+      toast.dismiss(toastId);
+      toast.success("Gambar berhasil diupload");
+    } catch (error) {
+      toast.dismiss(toastId);
+      toast.error(error.message);
+    }
+  };
+
+  const handleRemoveImage = async (index) => {
+    const imageToRemove = formData.images[index];
+    
+    // Hapus dari state visual dulu
+    const newImages = formData.images.filter((_, i) => i !== index);
+    
+    // Jika main image dihapus, set yg pertama jadi main
+    if (imageToRemove.is_main && newImages.length > 0) {
+      newImages[0].is_main = true;
+    }
+    setFormData((prev) => ({ ...prev, images: newImages }));
+
+    // Request hapus file fisik di server (cleanup)
+    try {
+        await deleteImageFromServer(token, imageToRemove.image_path);
+    } catch (err) {
+        console.error("Gagal hapus file fisik:", err);
+    }
+  };
+
+  const setMainImage = (index) => {
+    const newImages = formData.images.map((img, i) => ({
+      ...img,
+      is_main: i === index,
+    }));
+    setFormData((prev) => ({ ...prev, images: newImages }));
+  };
+
+  // --- LOGIC WHOLESALE ---
+  const addWholesale = () => {
+    setFormData((prev) => ({
+      ...prev,
+      wholesales: [...prev.wholesales, { min_qty: 0, price: 0 }],
+    }));
+  };
+  const removeWholesale = (index) => {
+    const newWs = formData.wholesales.filter((_, i) => i !== index);
+    setFormData((prev) => ({ ...prev, wholesales: newWs }));
+  };
+  const updateWholesale = (index, field, value) => {
+    const newWs = [...formData.wholesales];
+    newWs[index][field] = value;
+    setFormData((prev) => ({ ...prev, wholesales: newWs }));
+  };
+
+  // --- SUBMIT HANDLER (UTAMA) ---
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+
+    try {
+      // 1. GABUNGKAN PAYLOAD: Data Produk + Data Variasi
+      // Note: Di ProductVariationForm kita terima 'groups' dan 'variants' di state 'variationData'
+      // Tapi controller kita (yg baru) mengharapkan key: 'variationGroups' dan 'variants'
+      const payload = {
+        ...formData,
+        variationGroups: variationData.variationGroups || variationData.groups, // Handle beda penamaan state
+        variants: variationData.variants
+      };
+      
+      console.log("FINAL PAYLOAD:", payload); // Debugging
+
+      let productId = id;
+
+      if (isEdit) {
+        // --- UPDATE ---
+        await updateProduct(token, id, payload);
+        toast.success("Produk berhasil diperbarui!");
+      } else {
+        // --- CREATE ---
+        await createProduct(token, payload);
+        toast.success("Produk berhasil dibuat!");
+      }
+      navigate("/admin/products");
+
+    } catch (error) {
+      console.error(error);
+      toast.error(error.message || "Gagal menyimpan produk");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Helper untuk URL gambar
+  const getImageUrl = (path) => {
+    if (!path) return "https://via.placeholder.com/150";
+    if (path.startsWith("http")) return path;
+    const baseUrl = APP_CONFIG.API_BASE_URL.replace("/api", "");
+    return `${baseUrl}${path}`;
+  };
+
   return (
-    <form onSubmit={handleSubmit} className="container-fluid p-0 mb-5">
+    <div className="container-fluid p-0">
+      
+      {/* --- HEADER HALAMAN --- */}
       <div className="d-flex justify-content-between align-items-center mb-4">
-        <button
-          type="button"
-          className="btn btn-outline-secondary"
-          onClick={handleCancel}
-        >
-          <FiArrowLeft /> Kembali
-        </button>
-        <h4 className="fw-bold m-0">
-          {isEdit ? "Edit Produk" : "Produk Baru"}
-        </h4>
-        <button type="submit" className="btn btn-primary" disabled={loading}>
-          <FiSave className="me-2" /> Simpan
-        </button>
+        <div className="d-flex align-items-center">
+          <button
+            className="btn btn-outline-secondary me-3"
+            onClick={() => navigate("/admin/products")}
+          >
+            <FiArrowLeft />
+          </button>
+          <h4 className="fw-bold m-0">
+            {isEdit ? "Edit Produk" : "Tambah Produk Baru"}
+          </h4>
+        </div>
+        <div className="d-flex gap-2">
+           {/* Tombol Simpan Hanya Muncul di Tab Info atau Variasi */}
+           {activeTab !== 'stock' && (
+              <button className="btn btn-primary" onClick={handleSubmit} disabled={loading}>
+                <FiSave className="me-2" />
+                {loading ? "Menyimpan..." : "Simpan Produk"}
+              </button>
+           )}
+        </div>
       </div>
 
-      <div className="row g-4">
-        {/* KOLOM KIRI: Info Utama */}
-        <div className="col-lg-8">
-          <div className="card shadow-sm border-0 mb-4">
-            <div className="card-body">
-              <h6 className="fw-bold mb-3">Informasi Dasar</h6>
-              <div className="mb-3">
-                <label className="form-label">Nama Produk</label>
-                <input
-                  type="text"
-                  className="form-control"
-                  name="name"
-                  value={formData.name}
-                  onChange={handleChange}
-                  required
-                />
-              </div>
-              <div className="mb-3">
-                <label className="form-label">Deskripsi</label>
-                <textarea
-                  className="form-control"
-                  rows="4"
-                  name="description"
-                  value={formData.description}
-                  onChange={handleChange}
-                ></textarea>
-              </div>
-            </div>
-          </div>
-
-          {/* --- AREA UPLOAD GAMBAR --- */}
-          <div className="card shadow-sm border-0 mb-4">
-            <div className="card-body">
-              <h6 className="fw-bold mb-3">Gambar Produk</h6>
-
-              {/* Tombol Upload */}
-              <div className="mb-3">
-                <label
-                  className="btn btn-outline-primary w-100 p-3 border-dashed"
-                  style={{ borderStyle: "dashed" }}
+      {/* --- NAVIGASI TAB --- */}
+      <div className="mb-4 border-bottom">
+          <ul className="nav nav-tabs border-0">
+             <li className="nav-item">
+                <button 
+                   className={`nav-link ${activeTab === 'info' ? 'active fw-bold border-bottom-0' : ''}`}
+                   onClick={() => setActiveTab('info')}
                 >
-                  <FiUpload size={24} className="mb-2 d-block mx-auto" />
-                  <span>Klik untuk Upload Gambar</span>
-                  <input
-                    type="file"
-                    className="d-none"
-                    accept="image/*"
-                    onChange={handleImageUpload}
-                    disabled={loading}
-                  />
-                </label>
-                <small className="text-muted d-block text-center mt-2">
-                  Maksimal 2MB. Format: JPG, PNG.
-                </small>
-              </div>
-
-              {/* List Preview Gambar */}
-              <div className="row g-2">
-                {formData.images.map((img, idx) => (
-                  <div key={idx} className="col-4 col-md-3">
-                    <div
-                      className="position-relative border rounded overflow-hidden"
-                      style={{ aspectRatio: "1/1" }}
+                   <FiCheckCircle className="me-2"/> Informasi Produk
+                </button>
+             </li>
+             <li className="nav-item">
+                <button 
+                   className={`nav-link ${activeTab === 'variation' ? 'active fw-bold border-bottom-0' : ''}`}
+                   onClick={() => setActiveTab('variation')}
+                >
+                   <FiRefreshCw className="me-2"/> Variasi & Pilihan
+                </button>
+             </li>
+             {/* Tab Riwayat Stok hanya muncul saat EDIT MODE */}
+             {isEdit && (
+                 <li className="nav-item">
+                    <button 
+                       className={`nav-link ${activeTab === 'stock' ? 'active fw-bold border-bottom-0' : ''}`}
+                       onClick={() => setActiveTab('stock')}
                     >
-                      {/* Gambar */}
-                      <img
-                        // Jika img.image_path path relatif (/uploads/...), tambahkan BASE URL
-                        // Jika path absolut (http...), biarkan
-                        src={
-                          img.image_path.startsWith("http")
-                            ? img.image_path
-                            : `${APP_CONFIG.API_BASE_URL.replace("/api", "")}${
-                                img.image_path
-                              }`
-                        }
-                        alt={`Preview ${idx}`}
-                        className="w-100 h-100"
-                        style={{ objectFit: "cover" }}
-                      />
+                       <FiBox className="me-2"/> Riwayat Stok
+                    </button>
+                 </li>
+             )}
+          </ul>
+      </div>
 
-                      {/* Tombol Hapus (Pojok Kanan Atas) */}
-                      <button
-                        type="button"
-                        className="btn btn-danger btn-sm position-absolute top-0 end-0 m-1 p-0 d-flex align-items-center justify-content-center"
-                        style={{ width: 20, height: 20, borderRadius: "50%" }}
-                        onClick={() => removeImage(idx)}
+      {/* ================================================================== */}
+      {/* TAB CONTENT 1: INFORMASI PRODUK (FORM UTAMA)                       */}
+      {/* ================================================================== */}
+      <div className={activeTab === 'info' ? 'd-block' : 'd-none'}>
+        <form onSubmit={handleSubmit}>
+          <div className="row">
+            {/* KOLOM KIRI (Info Utama) */}
+            <div className="col-lg-8">
+              {/* Card Informasi Dasar */}
+              <div className="card shadow-sm border-0 mb-4">
+                <div className="card-header bg-white py-3">
+                  <h6 className="m-0 fw-bold">Informasi Dasar</h6>
+                </div>
+                <div className="card-body">
+                  <div className="mb-3">
+                    <label className="form-label small fw-bold">Nama Produk</label>
+                    <input
+                      type="text"
+                      className="form-control"
+                      name="name"
+                      value={formData.name}
+                      onChange={handleChange}
+                      required
+                      placeholder="Contoh: Kemeja Flanel Kotak"
+                    />
+                  </div>
+                  <div className="row mb-3">
+                    <div className="col-md-6">
+                      <label className="form-label small fw-bold">Kategori</label>
+                      <select
+                        className="form-select"
+                        name="category_id"
+                        value={formData.category_id}
+                        onChange={handleChange}
                       >
-                        <FiX size={12} />
-                      </button>
-
-                      {/* Tombol Set Main (Bagian Bawah) */}
-                      <button
-                        type="button"
-                        className={`btn btn-sm w-100 position-absolute bottom-0 start-0 rounded-0 ${
-                          img.is_main ? "btn-success" : "btn-light opacity-75"
-                        }`}
-                        style={{ fontSize: "10px" }}
-                        onClick={() => setMainImage(idx)}
+                        <option value="">-- Pilih Kategori --</option>
+                        {categories.map((cat) => (
+                          <option key={cat.id} value={cat.id}>
+                            {cat.name}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <div className="col-md-6">
+                      <label className="form-label small fw-bold">Visibilitas</label>
+                      <select
+                        className="form-select"
+                        name="visibility"
+                        value={formData.visibility}
+                        onChange={handleChange}
                       >
-                        {img.is_main ? (
-                          <>
-                            <FiCheckCircle className="me-1" /> Utama
-                          </>
-                        ) : (
-                          <>
-                            <FiCircle className="me-1" /> Jadikan Utama
-                          </>
-                        )}
-                      </button>
+                        <option value="public">Publik</option>
+                        <option value="hidden">Tersembunyi</option>
+                        <option value="link_only">Hanya Link</option>
+                      </select>
                     </div>
                   </div>
-                ))}
-              </div>
-            </div>
-          </div>
-
-          {/* Harga & Grosir */}
-          <div className="card shadow-sm border-0 mb-4">
-            <div className="card-body">
-              <h6 className="fw-bold mb-3">Harga</h6>
-              <div className="row g-3 mb-3">
-                <div className="col-md-4">
-                  <label className="form-label">Harga Modal</label>
-                  <input
-                    type="number"
-                    className="form-control"
-                    name="base_price"
-                    value={formData.base_price}
-                    onChange={handleChange}
-                  />
-                </div>
-                <div className="col-md-4">
-                  <label className="form-label">Harga Jual</label>
-                  <input
-                    type="number"
-                    className="form-control"
-                    name="sales_price"
-                    value={formData.sales_price}
-                    onChange={handleChange}
-                  />
-                </div>
-                <div className="col-md-4">
-                  <label className="form-label">Harga Coret</label>
-                  <input
-                    type="number"
-                    className="form-control"
-                    name="max_price"
-                    value={formData.max_price}
-                    onChange={handleChange}
-                  />
+                  <div className="mb-3">
+                    <label className="form-label small fw-bold">Deskripsi</label>
+                    <textarea
+                      className="form-control"
+                      rows="5"
+                      name="description"
+                      value={formData.description}
+                      onChange={handleChange}
+                    ></textarea>
+                  </div>
                 </div>
               </div>
 
-              <label className="form-label fw-bold">Harga Grosir</label>
-              {formData.wholesales.map((w, idx) => (
-                <div key={idx} className="input-group mb-2">
-                  <span className="input-group-text">Min Qty</span>
-                  <input
-                    type="number"
-                    className="form-control"
-                    value={w.min_qty}
-                    onChange={(e) =>
-                      changeWholesale(idx, "min_qty", e.target.value)
-                    }
-                  />
-                  <span className="input-group-text">Harga</span>
-                  <input
-                    type="number"
-                    className="form-control"
-                    value={w.price}
-                    onChange={(e) =>
-                      changeWholesale(idx, "price", e.target.value)
-                    }
-                  />
-                  <button
-                    type="button"
-                    className="btn btn-outline-danger"
-                    onClick={() => removeWholesale(idx)}
-                  >
-                    <FiTrash />
+              {/* Card Media (Gambar) */}
+              <div className="card shadow-sm border-0 mb-4">
+                <div className="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+                  <h6 className="m-0 fw-bold">Media Produk</h6>
+                  <label className="btn btn-sm btn-outline-primary">
+                    <FiUpload className="me-1" /> Upload Gambar
+                    <input
+                      type="file"
+                      multiple
+                      accept="image/*"
+                      className="d-none"
+                      onChange={handleImageUpload}
+                    />
+                  </label>
+                </div>
+                <div className="card-body">
+                  <div className="row g-2">
+                    {formData.images.map((img, index) => (
+                      <div className="col-6 col-md-3" key={index}>
+                        <div className={`position-relative border rounded overflow-hidden ${img.is_main ? 'border-primary border-2' : ''}`} style={{ height: "120px" }}>
+                          <img
+                            src={getImageUrl(img.image_path)}
+                            alt={`Upload ${index}`}
+                            className="w-100 h-100 object-fit-cover"
+                          />
+                          <button
+                            type="button"
+                            className="btn btn-xs btn-danger position-absolute top-0 end-0 m-1"
+                            onClick={() => handleRemoveImage(index)}
+                          >
+                            <FiX />
+                          </button>
+                          {!img.is_main && (
+                            <button
+                              type="button"
+                              className="btn btn-xs btn-light position-absolute bottom-0 start-0 m-1 opacity-75"
+                              onClick={() => setMainImage(index)}
+                              title="Jadikan Utama"
+                            >
+                              <FiCheckCircle />
+                            </button>
+                          )}
+                          {img.is_main && (
+                            <span className="badge bg-primary position-absolute bottom-0 start-0 m-1">Utama</span>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                    {formData.images.length === 0 && (
+                      <div className="col-12 text-center text-muted py-4 border rounded bg-light">
+                        Belum ada gambar yang diupload.
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Card Harga Grosir */}
+              <div className="card shadow-sm border-0 mb-4">
+                <div className="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+                  <h6 className="m-0 fw-bold">Harga Grosir</h6>
+                  <button type="button" className="btn btn-sm btn-outline-primary" onClick={addWholesale}>
+                    <FiPlus /> Tambah
                   </button>
                 </div>
-              ))}
-              <button
-                type="button"
-                className="btn btn-sm btn-outline-primary mt-1"
-                onClick={addWholesale}
-              >
-                <FiPlus /> Tambah Grosir
-              </button>
+                <div className="card-body">
+                  {formData.wholesales.length === 0 ? (
+                    <p className="text-muted small m-0">Tidak ada harga grosir diatur.</p>
+                  ) : (
+                    <div className="table-responsive">
+                      <table className="table table-sm table-borderless align-middle m-0">
+                        <thead>
+                          <tr className="text-muted small">
+                            <th>Min. Qty</th>
+                            <th>Harga Satuan</th>
+                            <th></th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {formData.wholesales.map((ws, idx) => (
+                            <tr key={idx}>
+                              <td>
+                                <input
+                                  type="number"
+                                  className="form-control form-control-sm"
+                                  value={ws.min_qty}
+                                  onChange={(e) => updateWholesale(idx, "min_qty", e.target.value)}
+                                />
+                              </td>
+                              <td>
+                                <input
+                                  type="number"
+                                  className="form-control form-control-sm"
+                                  value={ws.price}
+                                  onChange={(e) => updateWholesale(idx, "price", e.target.value)}
+                                />
+                              </td>
+                              <td>
+                                <button type="button" className="btn btn-sm text-danger" onClick={() => removeWholesale(idx)}>
+                                  <FiTrash />
+                                </button>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+                </div>
+              </div>
             </div>
-          </div>
 
-          {/* Inventaris */}
-          <div className="card shadow-sm border-0 mb-4">
-            <div className="card-body">
-              <h6 className="fw-bold mb-3">Inventaris</h6>
-              <div className="row g-3">
-                <div className="col-md-4">
-                  <label className="form-label">SKU</label>
-                  <input
-                    type="text"
-                    className="form-control"
-                    name="sku"
-                    value={formData.sku}
-                    onChange={handleChange}
-                  />
+            {/* KOLOM KANAN (Harga, Stok, Pengiriman, SEO) */}
+            <div className="col-lg-4">
+              {/* Card Harga & Stok */}
+              <div className="card shadow-sm border-0 mb-4">
+                <div className="card-header bg-white py-3">
+                  <h6 className="m-0 fw-bold">Harga & Stok (Utama)</h6>
                 </div>
-                <div className="col-md-4">
-                  <label className="form-label">Stok Saat Ini</label>
-                  <input
-                    type="number"
-                    className="form-control"
-                    name="stock_current"
-                    value={formData.stock_current}
-                    onChange={handleChange}
-                  />
-                </div>
-                <div className="col-md-4">
-                  <label className="form-label">Stok Minimal</label>
-                  <input
-                    type="number"
-                    className="form-control"
-                    name="stock_minimum"
-                    value={formData.stock_minimum}
-                    onChange={handleChange}
-                  />
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Pengiriman */}
-          <div className="card shadow-sm border-0">
-            <div className="card-body">
-              <h6 className="fw-bold mb-3">Pengiriman (Dimensi)</h6>
-              <div className="row g-3">
-                <div className="col-6 col-md-3">
-                  <label className="form-label">Berat (gram)</label>
-                  <input
-                    type="number"
-                    className="form-control"
-                    name="weight"
-                    value={formData.weight}
-                    onChange={handleChange}
-                  />
-                </div>
-                <div className="col-6 col-md-3">
-                  <label className="form-label">Panjang (cm)</label>
-                  <input
-                    type="number"
-                    className="form-control"
-                    name="length"
-                    value={formData.length}
-                    onChange={handleChange}
-                  />
-                </div>
-                <div className="col-6 col-md-3">
-                  <label className="form-label">Lebar (cm)</label>
-                  <input
-                    type="number"
-                    className="form-control"
-                    name="width"
-                    value={formData.width}
-                    onChange={handleChange}
-                  />
-                </div>
-                <div className="col-6 col-md-3">
-                  <label className="form-label">Tinggi (cm)</label>
-                  <input
-                    type="number"
-                    className="form-control"
-                    name="height"
-                    value={formData.height}
-                    onChange={handleChange}
-                  />
-                </div>
-                <div className="col-12">
-                  <small className="text-muted">
-                    Berat Volumetrik (Otomatis): {formData.volumetric_weight}{" "}
-                    gram
-                  </small>
-                </div>
-              </div>
-            </div>
-          </div>
-          {/* Variasi */}
-          <div className="card shadow-sm border-0">
-            <div className="card-body">
-              <div className="col-12">
-                <ProductVariationForm
-                  onVariationsChange={handleVariationsChange}
-                  initialData={initialVariationData}
-                  // --- PERBAIKAN 2: KIRIM DATA UNTUK VALIDASI ---
-                  parentPrice={formData.sales_price} // Harga Jual
-                  parentSku={formData.sku} // SKU Induk
-                />
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* KOLOM KANAN: Status, Kategori, SEO */}
-        <div className="col-lg-4">
-          <div className="card shadow-sm border-0 mb-4">
-            <div className="card-body">
-              <h6 className="fw-bold mb-3">Organisasi</h6>
-              <div className="mb-3">
-                <label className="form-label">Status Visibilitas</label>
-                <select
-                  className="form-select"
-                  name="visibility"
-                  value={formData.visibility}
-                  onChange={handleChange}
-                >
-                  <option value="public">Public (Publik)</option>
-                  <option value="hidden">Hidden (Sembunyi)</option>
-                  <option value="link_only">Link Only</option>
-                </select>
-              </div>
-              <div className="mb-3">
-                <label className="form-label">Kategori</label>
-                <select
-                  className="form-select"
-                  name="category_id"
-                  value={formData.category_id}
-                  onChange={handleChange}
-                >
-                  <option value="">-- Uncategorized --</option>
-                  {categories.map((c) => (
-                    <option key={c.id} value={c.id}>
-                      {c.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            </div>
-          </div>
-
-          <div className="card shadow-sm border-0 mb-4">
-            <div className="card-body">
-              <h6 className="fw-bold mb-3">Preorder</h6>
-              <div className="form-check form-switch mb-3">
-                <input
-                  className="form-check-input"
-                  type="checkbox"
-                  name="is_preorder"
-                  checked={formData.is_preorder}
-                  onChange={handleChange}
-                />
-                <label className="form-check-label">Aktifkan Preorder</label>
-              </div>
-              {formData.is_preorder && (
-                <>
+                <div className="card-body">
                   <div className="mb-2">
-                    <label className="form-label small">
-                      Waktu Proses (Hari)
-                    </label>
+                    <label className="form-label small">SKU (Kode Stok)</label>
                     <input
-                      type="number"
+                      type="text"
                       className="form-control form-control-sm"
-                      name="po_process_time"
-                      value={formData.po_process_time}
+                      name="sku"
+                      value={formData.sku}
                       onChange={handleChange}
                     />
                   </div>
                   <div className="mb-2">
-                    <label className="form-label small">Kewajiban DP</label>
-                    <select
-                      className="form-select form-select-sm"
-                      name="po_dp_requirement"
-                      value={formData.po_dp_requirement}
+                    <label className="form-label small">Harga Jual (Rp)</label>
+                    <input
+                      type="number"
+                      className="form-control form-control-sm"
+                      name="sales_price"
+                      value={formData.sales_price}
                       onChange={handleChange}
-                    >
-                      <option value="none">Tidak Ada DP</option>
-                      <option value="optional">Opsional</option>
-                      <option value="mandatory">Wajib</option>
-                    </select>
+                    />
                   </div>
-                  {formData.po_dp_requirement !== "none" && (
-                    <div className="row g-2">
-                      <div className="col-6">
-                        <label className="form-label small">Tipe DP</label>
-                        <select
-                          className="form-select form-select-sm"
-                          name="po_dp_type"
-                          value={formData.po_dp_type}
-                          onChange={handleChange}
-                        >
-                          <option value="fixed">Nominal</option>
-                          <option value="percentage">Persen</option>
-                        </select>
-                      </div>
-                      <div className="col-6">
-                        <label className="form-label small">Nilai</label>
-                        <input
-                          type="number"
-                          className="form-control form-control-sm"
-                          name="po_dp_value"
-                          value={formData.po_dp_value}
-                          onChange={handleChange}
-                        />
-                      </div>
+                  <div className="row mb-2">
+                    <div className="col-6">
+                      <label className="form-label small">Harga Coret</label>
+                      <input
+                        type="number"
+                        className="form-control form-control-sm"
+                        name="base_price"
+                        value={formData.base_price}
+                        onChange={handleChange}
+                      />
                     </div>
-                  )}
-                </>
-              )}
-            </div>
-          </div>
+                    <div className="col-6">
+                      <label className="form-label small">Modal (HPP)</label>
+                      <input
+                        type="number"
+                        className="form-control form-control-sm"
+                        name="max_price"
+                        value={formData.max_price}
+                        onChange={handleChange}
+                      />
+                    </div>
+                  </div>
+                  
+                  {/* Stok hanya bisa diedit di tab ini jika BUKAN mode edit dengan variasi */}
+                  {/* Kalau mode edit, stok diatur lewat Tab Stok / Opname */}
+                  <div className="row mb-2">
+                    <div className="col-6">
+                      <label className="form-label small">Stok Saat Ini</label>
+                      <input
+                        type="number"
+                        className="form-control form-control-sm"
+                        name="stock_current"
+                        value={formData.stock_current}
+                        onChange={handleChange}
+                        disabled={isEdit} // Disable saat edit agar pakai Stock Opname
+                        title={isEdit ? "Gunakan Tab Riwayat Stok untuk ubah stok" : ""}
+                      />
+                    </div>
+                    <div className="col-6">
+                      <label className="form-label small">Min. Stok</label>
+                      <input
+                        type="number"
+                        className="form-control form-control-sm"
+                        name="stock_minimum"
+                        value={formData.stock_minimum}
+                        onChange={handleChange}
+                      />
+                    </div>
+                  </div>
+                  {isEdit && <small className="text-muted fst-italic" style={{fontSize: '10px'}}>*Gunakan Tab 'Riwayat Stok' untuk penyesuaian stok.</small>}
+                </div>
+              </div>
 
-          <div className="card shadow-sm border-0">
-            <div className="card-body">
-              <h6 className="fw-bold mb-3">SEO (Metadata)</h6>
-              <div className="mb-2">
-                <label className="form-label small">Judul Halaman</label>
-                <input
-                  type="text"
-                  className="form-control form-control-sm"
-                  name="seo_title"
-                  value={formData.seo_title}
-                  onChange={handleChange}
-                  placeholder="Default: Nama Produk"
-                />
+              {/* Card Pengiriman */}
+              <div className="card shadow-sm border-0 mb-4">
+                <div className="card-header bg-white py-3">
+                  <h6 className="m-0 fw-bold">Pengiriman</h6>
+                </div>
+                <div className="card-body">
+                  <div className="mb-2">
+                    <label className="form-label small">Berat (gram)</label>
+                    <input
+                      type="number"
+                      className="form-control form-control-sm"
+                      name="weight"
+                      value={formData.weight}
+                      onChange={handleChange}
+                    />
+                  </div>
+                  <div className="row g-2">
+                    <div className="col-4">
+                      <label className="form-label small">P (cm)</label>
+                      <input
+                        type="number"
+                        className="form-control form-control-sm"
+                        name="length"
+                        value={formData.length}
+                        onChange={handleChange}
+                      />
+                    </div>
+                    <div className="col-4">
+                      <label className="form-label small">L (cm)</label>
+                      <input
+                        type="number"
+                        className="form-control form-control-sm"
+                        name="width"
+                        value={formData.width}
+                        onChange={handleChange}
+                      />
+                    </div>
+                    <div className="col-4">
+                      <label className="form-label small">T (cm)</label>
+                      <input
+                        type="number"
+                        className="form-control form-control-sm"
+                        name="height"
+                        value={formData.height}
+                        onChange={handleChange}
+                      />
+                    </div>
+                  </div>
+                </div>
               </div>
-              <div className="mb-2">
-                <label className="form-label small">Slug (URL)</label>
-                <input
-                  type="text"
-                  className="form-control form-control-sm"
-                  name="slug"
-                  value={formData.slug}
-                  onChange={handleChange}
-                  placeholder="Auto-generated"
-                />
-              </div>
-              <div className="mb-2">
-                <label className="form-label small">Meta Deskripsi</label>
-                <textarea
-                  className="form-control form-control-sm"
-                  rows="3"
-                  name="seo_description"
-                  value={formData.seo_description}
-                  onChange={handleChange}
-                  placeholder="Default: Deskripsi Produk"
-                ></textarea>
+
+              {/* Card SEO */}
+              <div className="card shadow-sm border-0 mb-4">
+                <div className="card-header bg-white py-3">
+                  <h6 className="m-0 fw-bold">SEO (Metadata)</h6>
+                </div>
+                <div className="card-body">
+                  <div className="mb-2">
+                    <label className="form-label small">Judul Halaman</label>
+                    <input
+                      type="text"
+                      className="form-control form-control-sm"
+                      name="seo_title"
+                      value={formData.seo_title}
+                      onChange={handleChange}
+                      placeholder="Default: Nama Produk"
+                    />
+                  </div>
+                  <div className="mb-2">
+                    <label className="form-label small">Slug (URL)</label>
+                    <input
+                      type="text"
+                      className="form-control form-control-sm"
+                      name="slug"
+                      value={formData.slug}
+                      onChange={handleChange}
+                      placeholder="Auto-generated"
+                    />
+                  </div>
+                  <div className="mb-2">
+                    <label className="form-label small">Meta Deskripsi</label>
+                    <textarea
+                      className="form-control form-control-sm"
+                      rows="3"
+                      name="seo_description"
+                      value={formData.seo_description}
+                      onChange={handleChange}
+                      placeholder="Default: Deskripsi Produk"
+                    ></textarea>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
-        </div>
+        </form>
       </div>
-    </form>
+
+      {/* ================================================================== */}
+      {/* TAB CONTENT 2: VARIASI & PILIHAN                                   */}
+      {/* ================================================================== */}
+      <div className={activeTab === 'variation' ? 'd-block' : 'd-none'}>
+         <div className="card border-0 shadow-sm">
+            <div className="card-body">
+               <div className="alert alert-info py-2 small">
+                  <FiCheckCircle className="me-2"/>
+                  Atur variasi seperti warna dan ukuran di sini. Kombinasi SKU akan digenerate otomatis.
+               </div>
+               
+               {/* Komponen Form Variasi */}
+               <ProductVariationForm 
+                  initialData={variationData} // Data dari backend (groups & variants)
+                  onVariationsChange={(newData) => setVariationData(newData)} // Update state saat diedit
+                  parentPrice={formData.sales_price}
+                  parentSku={formData.sku}
+               />
+            </div>
+         </div>
+      </div>
+
+      {/* ================================================================== */}
+      {/* TAB CONTENT 3: RIWAYAT STOK (HANYA EDIT MODE)                      */}
+      {/* ================================================================== */}
+      {isEdit && (
+         <div className={activeTab === 'stock' ? 'd-block' : 'd-none'}>
+             <StockHistoryTab 
+                 productId={id} 
+                 variants={variationData.variants || []} // Kirim data varian untuk dropdown opname
+                 onStockChange={() => loadProductData()} // Refresh data jika stok berubah
+             />
+         </div>
+      )}
+
+    </div>
   );
 };
 
