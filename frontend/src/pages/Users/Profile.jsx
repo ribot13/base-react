@@ -1,4 +1,5 @@
-/* eslint-disable no-unused-vars */
+/* eslint-disable react-hooks/exhaustive-deps */
+ 
 // frontend/src/pages/Users/Profile.jsx
 import React, { useState, useEffect } from "react";
 import { FiUser, FiMail, FiCalendar, FiLock, FiSave } from "react-icons/fi";
