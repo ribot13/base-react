@@ -225,27 +225,35 @@ exports.delete = async (req, res) => {
 };
 
 // ==========================================
-// 1. GET PROFILE (Current User)
+// 5. GET PROFILE (Current User)
 // ==========================================
 exports.getProfile = async (req, res) => {
     try {
         // ID diambil dari token yang diverifikasi di middleware (req.user.id)
         const userId = req.user.id; 
-        //console.log(`USER ID: ${req}`);
         
         const user = await User.findByPk(userId, {
             attributes: { 
-                // Exclude password untuk keamanan
-                exclude: ['password', 'role_id', 'created_at', 'updated_at'] 
+                // AMBIL FIELD YANG DIBUTUHKAN FRONTEND
+                exclude: ['password', 'is_active', '_deleted', 'created_at', 'updated_at', 'username', 'role_id'] 
             },
-            include: [{ model: Role, as: 'Role', attributes: ['name'] }]
+            // Asumsi model User memiliki Many-to-Many ke Role (Roles)
+            include: [{ model: Role, as: 'Roles', attributes: ['name'], through: { attributes: [] } }] 
         });
 
         if (!user) {
             return res.status(404).json({ message: "User tidak ditemukan." });
         }
+        
+        const userData = user.get({ plain: true });
+        const highestRoleName = userData.Roles && userData.Roles.length > 0 ? userData.Roles[0].name : 'User';
 
-        res.status(200).json(user);
+        res.status(200).json({
+            ...userData,
+            role: highestRoleName, 
+            birthday: userData.birthday // Kirim langsung, frontend akan memformat
+        });
+        
     } catch (error) {
         console.error("Error fetching user profile:", error);
         res.status(500).json({ message: error.message });
@@ -253,17 +261,17 @@ exports.getProfile = async (req, res) => {
 };
 
 // ==========================================
-// 2. UPDATE PROFILE (Data Pribadi)
+// 6. UPDATE PROFILE (Data Pribadi)
 // ==========================================
 exports.updateProfile = async (req, res) => {
+    const { full_name, birthday, email } = req.body;
+    const userId = req.user.id; // ID user dari token
+
     try {
-        const userId = req.user.id;
-        const { full_name, birthday, email } = req.body;
-        
         const user = await User.findByPk(userId);
         if (!user) return res.status(404).json({ message: "User tidak ditemukan." });
 
-        // Validasi minimal (Misal: email unik)
+        // Validasi Email Unik
         if (email && email !== user.email) {
             const existing = await User.findOne({ where: { email } });
             if (existing) {
@@ -273,11 +281,11 @@ exports.updateProfile = async (req, res) => {
 
         await user.update({
             full_name, 
-            birthday: birthday || null, // Tangani jika birthday kosong
+            birthday: birthday || null, 
             email
         });
 
-        res.json({ message: "Profil berhasil diperbarui." });
+        res.status(200).json({ message: "Profil berhasil diperbarui." });
 
     } catch (error) {
         console.error("Error updating user profile:", error);

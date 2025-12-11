@@ -1,42 +1,44 @@
-// routes/user.routes.js
+// backend/routes/user.routes.js
 const express = require('express');
 const router = express.Router();
-// 🎯 Import Controller dan Middlewares yang Anda miliki
 const userController = require('../controllers/user.controller');
 const { verifyToken } = require('../middlewares/auth'); 
 const { fetchPermissions, hasPermission } = require('../middlewares/permission.middleware'); 
 
-
-// 🎯 Definisikan Izin yang diperlukan untuk mengelola User
+// Permission untuk admin
 const permission = 'manage-users';
 
-// Middleware yang dibutuhkan: [verifyToken, fetchPermissions, hasPermission(permission)]
+// ==================================================================
+// 1. ROUTE PROFILE (WAJIB DI PALING ATAS!)
+// ==================================================================
+// Route ini khusus user login (akses diri sendiri)
+// Jika ditaruh di bawah /:id, "profile" akan dianggap sebagai ID user (Error 404/Empty Form)
 
-// 1. GET - Ambil semua User (Read All)
+router.get('/profile', verifyToken, userController.getProfile);
+router.put('/profile', verifyToken, userController.updateProfile);
+router.post('/profile/change-password', verifyToken, userController.changePassword);
+
+// ==================================================================
+// 2. ROUTE MANAJEMEN USER (ADMIN)
+// ==================================================================
+
+// GET - Ambil semua User
 router.get('/', [verifyToken, fetchPermissions, hasPermission(permission)], userController.findAll);
 
-router.get('/:id', [verifyToken, fetchPermissions, hasPermission(permission)], userController.findOne);
-
-// 2. POST - Buat User Baru (Create)
+// POST - Buat User Baru
 router.post('/', [verifyToken, fetchPermissions, hasPermission(permission)], userController.create);
 
-// 3. PUT - Update User berdasarkan ID (Update)
+// ------------------------------------------------------------------
+// ROUTE DINAMIS (/:id) HARUS DI PALING BAWAH
+// ------------------------------------------------------------------
+
+// GET - Ambil user by ID
+router.get('/:id', [verifyToken, fetchPermissions, hasPermission(permission)], userController.findOne);
+
+// PUT - Update User by ID
 router.put('/:id', [verifyToken, fetchPermissions, hasPermission(permission)], userController.update);
 
-// 4. DELETE - Hapus User berdasarkan ID (Delete)
+// DELETE - Hapus User by ID
 router.delete('/:id', [verifyToken, fetchPermissions, hasPermission(permission)], userController.delete);
-
-// ==========================================
-// ROUTE PROFILE (Akses oleh user yang sedang login)
-// ==========================================
-
-// GET: Ambil data profil
-router.get('/profile', verifyToken, userController.getProfile);
-
-// PUT: Update data pribadi (full_name, email, birthday)
-router.put('/profile', verifyToken, userController.updateProfile);
-
-// POST: Ubah password
-router.post('/profile/change-password', verifyToken, userController.changePassword);
 
 module.exports = router;

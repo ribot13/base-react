@@ -109,16 +109,24 @@ export const deleteUser = async (token, userId) => {
 
 // 1. Fetch Profile
 export const fetchProfile = async (token) => {
-    const response = await fetch(`${API_BASE_URL}/profile`, {
-        headers: { Authorization: `Bearer ${token}` }
+    const response = await fetch(`${API_BASE_URL}/admin/users/profile`, { 
+        headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json',
+        },
     });
-    if (!response.ok) throw new Error("Gagal mengambil data profil.");
-    return await response.json();
+
+    if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || 'Gagal mengambil data profil');
+    }
+
+    return response.json(); // <--- PENTING: Harus di-return sebagai JSON
 };
 
 // 2. Update Profile
 export const updateProfile = async (token, data) => {
-    const response = await fetch(`${API_BASE_URL}/profile`, {
+    const response = await fetch(`${API_BASE_URL}/admin/users/profile`, {
         method: 'PUT',
         headers: {
             'Content-Type': 'application/json',
@@ -133,7 +141,7 @@ export const updateProfile = async (token, data) => {
 
 // 3. Change Password
 export const changePassword = async (token, data) => {
-    const response = await fetch(`${API_BASE_URL}/profile/change-password`, {
+    const response = await fetch(`${API_BASE_URL}/admin/users/profile/change-password`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
