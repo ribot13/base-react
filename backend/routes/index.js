@@ -19,6 +19,7 @@ module.exports = (app) => {
         ['/api/upload', uploadRoutes],
         ['/api/auth', authRoutes],
         ['/api/menu', menuRoutes],
+        ['/api/profile', userRoutes],
         ['/api/admin/users', userRoutes],
         ['/api/roles', roleRoutes],
         ['/api/products/category', productCategoryRoutes],

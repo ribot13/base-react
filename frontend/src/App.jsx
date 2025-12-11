@@ -13,6 +13,7 @@ import "react-toastify/dist/ReactToastify.css";
 
 // Components & Pages
 import LoginPage from "./pages/Auth";
+import Profile from "./pages/Users/Profile.jsx";
 import MainLayout from "./layouts/MainLayout.jsx";
 import DashboardPage from "./pages/Dashboard";
 import MenuAdmin from "./pages/MenuAdministrasi";
@@ -56,6 +57,8 @@ const App = () => (
           <Route element={<LayoutWrapper />}>
             {/* Definisi Halaman */}
             <Route path="/dashboard" element={<DashboardPage />} />
+            {/* Profile Page */}
+            <Route path="/profile" element={<Profile />} />
             {/* Halaman Produk */}
             <Route
               path="admin/products"

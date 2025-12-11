@@ -26,5 +26,17 @@ router.put('/:id', [verifyToken, fetchPermissions, hasPermission(permission)], u
 // 4. DELETE - Hapus User berdasarkan ID (Delete)
 router.delete('/:id', [verifyToken, fetchPermissions, hasPermission(permission)], userController.delete);
 
+// ==========================================
+// ROUTE PROFILE (Akses oleh user yang sedang login)
+// ==========================================
+
+// GET: Ambil data profil
+router.get('/profile', verifyToken, userController.getProfile);
+
+// PUT: Update data pribadi (full_name, email, birthday)
+router.put('/profile', verifyToken, userController.updateProfile);
+
+// POST: Ubah password
+router.post('/profile/change-password', verifyToken, userController.changePassword);
 
 module.exports = router;

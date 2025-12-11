@@ -223,3 +223,103 @@ exports.delete = async (req, res) => {
         res.status(500).json({ message: "Gagal menghapus pengguna." });
     }
 };
+
+// ==========================================
+// 1. GET PROFILE (Current User)
+// ==========================================
+exports.getProfile = async (req, res) => {
+    try {
+        // ID diambil dari token yang diverifikasi di middleware (req.user.id)
+        const userId = req.user.id; 
+        //console.log(`USER ID: ${req}`);
+        
+        const user = await User.findByPk(userId, {
+            attributes: { 
+                // Exclude password untuk keamanan
+                exclude: ['password', 'role_id', 'created_at', 'updated_at'] 
+            },
+            include: [{ model: Role, as: 'Role', attributes: ['name'] }]
+        });
+
+        if (!user) {
+            return res.status(404).json({ message: "User tidak ditemukan." });
+        }
+
+        res.status(200).json(user);
+    } catch (error) {
+        console.error("Error fetching user profile:", error);
+        res.status(500).json({ message: error.message });
+    }
+};
+
+// ==========================================
+// 2. UPDATE PROFILE (Data Pribadi)
+// ==========================================
+exports.updateProfile = async (req, res) => {
+    try {
+        const userId = req.user.id;
+        const { full_name, birthday, email } = req.body;
+        
+        const user = await User.findByPk(userId);
+        if (!user) return res.status(404).json({ message: "User tidak ditemukan." });
+
+        // Validasi minimal (Misal: email unik)
+        if (email && email !== user.email) {
+            const existing = await User.findOne({ where: { email } });
+            if (existing) {
+                return res.status(400).json({ message: "Email sudah digunakan oleh user lain." });
+            }
+        }
+
+        await user.update({
+            full_name, 
+            birthday: birthday || null, // Tangani jika birthday kosong
+            email
+        });
+
+        res.json({ message: "Profil berhasil diperbarui." });
+
+    } catch (error) {
+        console.error("Error updating user profile:", error);
+        res.status(500).json({ message: error.message });
+    }
+};
+
+// ==========================================
+// 3. CHANGE PASSWORD
+// ==========================================
+exports.changePassword = async (req, res) => {
+    try {
+        const userId = req.user.id;
+        const { old_password, new_password } = req.body;
+
+        if (!old_password || !new_password) {
+            return res.status(400).json({ message: "Password lama dan baru wajib diisi." });
+        }
+        
+        const user = await User.findByPk(userId);
+        if (!user) return res.status(404).json({ message: "User tidak ditemukan." });
+
+        // A. VALIDASI PASSWORD LAMA
+        const passwordIsValid = bcrypt.compareSync(
+            old_password,
+            user.password
+        );
+
+        if (!passwordIsValid) {
+            return res.status(401).json({ message: "Password lama salah." });
+        }
+
+        // B. HASH PASSWORD BARU & UPDATE
+        const salt = bcrypt.genSaltSync(10);
+        const newPasswordHash = bcrypt.hashSync(new_password, salt);
+
+        await user.update({ password: newPasswordHash });
+
+        res.json({ message: "Password berhasil diubah." });
+
+    } catch (error) {
+        console.error("Error changing password:", error);
+        res.status(500).json({ message: error.message });
+    }
+};

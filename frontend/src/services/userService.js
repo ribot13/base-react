@@ -106,3 +106,42 @@ export const deleteUser = async (token, userId) => {
     });
     return handleResponse(response);
 };
+
+// 1. Fetch Profile
+export const fetchProfile = async (token) => {
+    const response = await fetch(`${API_BASE_URL}/profile`, {
+        headers: { Authorization: `Bearer ${token}` }
+    });
+    if (!response.ok) throw new Error("Gagal mengambil data profil.");
+    return await response.json();
+};
+
+// 2. Update Profile
+export const updateProfile = async (token, data) => {
+    const response = await fetch(`${API_BASE_URL}/profile`, {
+        method: 'PUT',
+        headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify(data)
+    });
+    const result = await response.json();
+    if (!response.ok) throw new Error(result.message || "Gagal memperbarui profil.");
+    return result;
+};
+
+// 3. Change Password
+export const changePassword = async (token, data) => {
+    const response = await fetch(`${API_BASE_URL}/profile/change-password`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify(data)
+    });
+    const result = await response.json();
+    if (!response.ok) throw new Error(result.message || "Gagal mengubah password.");
+    return result;
+};
