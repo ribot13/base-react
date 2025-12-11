@@ -9,7 +9,7 @@ const {
 
 // 1. GET - Endpoint untuk Sidebar (DIAMBIL SETELAH LOGIN)
 router.get(
-  "/sidebar",
+  "/structure",
   [verifyToken, fetchPermissions],
   menuController.getSidebarMenu
 );

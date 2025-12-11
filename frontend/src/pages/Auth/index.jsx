@@ -23,7 +23,7 @@ const LoginPage = () => {
   const [isLoading, setIsLoading] = useState(false);
 
   const navigate = useNavigate();
-  const { login } = useAuth();
+  const { login } = useAuth(); // Ambil fungsi login dari context
 
   // Set judul tab browser
   usePageTitle(`Login - ${APP_CONFIG.APP_TITLE}`);
@@ -39,19 +39,25 @@ const LoginPage = () => {
         password,
       });
 
+      // Destructuring response dari backend
+      // Backend mengirim: { message, token, user, permissions }
       const { token, user, permissions } = response.data;
 
-      // Simpan sesi ke Context
-      login(user, permissions, token);
+      // ✅ PERBAIKAN DISINI:
+      // Urutan harus: (User Data, Token String, Permission Array)
+      login(user, token, permissions); 
 
-      // Redirect ke dashboard
+      // Redirect ke dashboard setelah login sukses
       navigate("/dashboard");
+      
     } catch (err) {
-      console.error("Login Gagal:", err);
-      // Pesan error yang lebih user-friendly
-      const message =
-        err.response?.data?.message || "Koneksi ke server gagal. Coba lagi nanti.";
-      setError(message);
+      console.error("Login Error:", err);
+      // Menangani pesan error dari backend
+      if (err.response && err.response.data && err.response.data.message) {
+        setError(err.response.data.message);
+      } else {
+        setError("Gagal terhubung ke server. Cek koneksi Anda.");
+      }
     } finally {
       setIsLoading(false);
     }

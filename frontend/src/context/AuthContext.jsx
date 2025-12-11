@@ -2,95 +2,131 @@
 /* eslint-disable no-unused-vars */
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { toast } from 'react-toastify'; 
+import { APP_CONFIG } from '../config/appConfig';
 
 const AuthContext = createContext();
-import { APP_CONFIG } from '../config/appConfig';
 const API_BASE_URL = APP_CONFIG.API_BASE_URL;
 
 export const AuthProvider = ({ children }) => {
-    // State dasar (tidak berubah)
-    const [isLoggedIn, setIsLoggedIn] = useState(!!localStorage.getItem('token'));
-    const [token, setToken] = useState(localStorage.getItem('token'));
-    const [permissions, setPermissions] = useState(
-        JSON.parse(localStorage.getItem('permissions')) || []
-    );
-    const [user, setUser] = useState(
-        JSON.parse(localStorage.getItem('user')) || null
-    );
-    
-    // 🎯 STATE BARU UNTUK MENU CACHING
-    const [sidebarMenu, setSidebarMenu] = useState(
-        JSON.parse(localStorage.getItem('sidebarMenu')) || [] // Data menu hierarki
-    );
-    const [menuVersion, setMenuVersion] = useState(
-        localStorage.getItem('menuVersion') || null // Versi menu dari backend
-    );
-
-
-    // Fungsi baru untuk mengambil dan menyimpan menu dari backend
-    const fetchAndSetMenu = async (authToken, newMenuVersion) => {
+    // --- HELPER: SAFE PARSE JSON ---
+    // Mencegah error crash jika localStorage berisi "undefined" atau data rusak
+    const safeParse = (key, fallback) => {
         try {
-            const response = await fetch(`${API_BASE_URL}/menu/sidebar`, {
-                headers: { 
-                    'Authorization': `Bearer ${authToken}`,
-                    'Content-Type': 'application/json',
-                }
-            });
-            
-            if (!response.ok) {
-                throw new Error("Gagal mengambil data menu.");
+            const item = localStorage.getItem(key);
+            // Cek null, undefined, atau string "undefined"
+            if (!item || item === "undefined" || item === "null") {
+                return fallback;
             }
-            
-            const menuData = await response.json(); 
-
-            // Simpan menu baru
-            setSidebarMenu(menuData);
-            localStorage.setItem('sidebarMenu', JSON.stringify(menuData));
-            
-            // Perbarui versi
-            setMenuVersion(newMenuVersion);
-            localStorage.setItem('menuVersion', newMenuVersion);
-
+            return JSON.parse(item);
         } catch (error) {
-            console.error("Gagal mengambil data menu:", error);
-            toast.error("Gagal memuat menu: " + error.message);
+            console.warn(`Error parsing key "${key}" from localStorage:`, error);
+            // Hapus data rusak agar tidak error lagi
+            localStorage.removeItem(key);
+            return fallback;
         }
     };
 
+    // 1. State Initialization
+    const [isLoggedIn, setIsLoggedIn] = useState(!!localStorage.getItem('token'));
+    const [token, setToken] = useState(localStorage.getItem('token'));
+    
+    // Gunakan safeParse untuk semua JSON
+    const [permissions, setPermissions] = useState(
+        safeParse('permissions', [])
+    );
+    
+    const [user, setUser] = useState(
+        safeParse('user', null)
+    );
+    
+    const [sidebarMenu, setSidebarMenu] = useState(
+        safeParse('sidebarMenu', []) 
+    );
 
-    // Fungsi Login yang dimodifikasi untuk Caching Logic
-    const login = (userData, userPermissions, authToken, newMenuVersion) => {
-        // Simpan data user dan token (Persistensi)
-        localStorage.setItem('token', authToken);
-        localStorage.setItem('permissions', JSON.stringify(userPermissions));
-        localStorage.setItem('user', JSON.stringify(userData));
-        localStorage.setItem('menuVersion', newMenuVersion); // Simpan versi baru
+    const [menuVersion, setMenuVersion] = useState(
+        localStorage.getItem('menuVersion') || null 
+    );
 
-        // Simpan ke State
+    // 2. Fungsi Fetch Menu (Sidebar)
+    const fetchAndSetMenu = async (authToken, currentVersion) => {
+        try {
+            const url = currentVersion 
+                ? `${API_BASE_URL}/menu/structure?v=${currentVersion}`
+                : `${API_BASE_URL}/menu/structure`;
+
+            const response = await fetch(url, {
+                headers: { 'Authorization': `Bearer ${authToken}` }
+            });
+
+            if (response.status === 304) {
+                console.log("Menu up-to-date (Cached)");
+                return; 
+            }
+
+            if (response.ok) {
+                const data = await response.json();
+                
+                // --- BAGIAN ANTI BLANK ---
+                // Cek apakah data adalah Array langsung, atau Object { menu: [] }
+                let finalMenu = [];
+                
+                if (Array.isArray(data)) {
+                    finalMenu = data; // Backend kirim array langsung
+                } else if (data && Array.isArray(data.menu)) {
+                    finalMenu = data.menu; // Backend kirim object { menu: ... }
+                } else {
+                    console.warn("Format menu dari API tidak dikenali:", data);
+                    finalMenu = []; // Fallback agar tidak crash
+                }
+
+                console.log("Menu berhasil dimuat:", finalMenu); // Debugging
+
+                setSidebarMenu(finalMenu); 
+                localStorage.setItem('sidebarMenu', JSON.stringify(finalMenu));
+                
+                if (data.version) {
+                    setMenuVersion(data.version);
+                    localStorage.setItem('menuVersion', data.version);
+                }
+            }
+        } catch (error) {
+            console.error("Gagal memuat menu:", error);
+            // Jangan throw error, biarkan aplikasi jalan dengan menu kosong
+            setSidebarMenu([]); 
+        }
+    };
+
+    // 3. Fungsi Login
+    const login = (userData, authToken, userPermissions = []) => {
+        // A. Update State
         setToken(authToken);
-        setPermissions(userPermissions);
         setUser(userData);
-        setMenuVersion(newMenuVersion); // Update state versi menu
+        setPermissions(userPermissions); 
         setIsLoggedIn(true);
 
-        newMenuVersion=userData?.menuVersion || 'v1.0.0';
-        fetchAndSetMenu(authToken,newMenuVersion);
-        // Toast notifikasi
+        // B. Simpan ke LocalStorage (Pastikan stringify aman)
+        localStorage.setItem('token', authToken);
+        localStorage.setItem('user', JSON.stringify(userData || null));
+        localStorage.setItem('permissions', JSON.stringify(userPermissions || [])); 
+
+        // C. Fetch Menu Sidebar
+        const currentVer = userData?.menuVersion || menuVersion || 'v1.0.0';
+        fetchAndSetMenu(authToken, currentVer);
+
         const name = userData?.full_name || "Pengguna";
         toast.success(`Selamat datang, ${name}!`); 
     };
 
-    // Fungsi Logout (tidak berubah)
+    // 4. Fungsi Logout
     const logout = () => {
-        // ... (Logika penghapusan data dari State dan localStorage) ...
         localStorage.removeItem('token');
-        localStorage.removeItem('permissions');
+        localStorage.removeItem('permissions'); 
         localStorage.removeItem('user');
-        localStorage.removeItem('sidebarMenu'); // Hapus cache menu saat logout
+        localStorage.removeItem('sidebarMenu');
         localStorage.removeItem('menuVersion');
         
         setToken(null);
-        setPermissions([]);
+        setPermissions([]); 
         setUser(null);
         setSidebarMenu([]);
         setMenuVersion(null);
@@ -99,15 +135,13 @@ export const AuthProvider = ({ children }) => {
         toast.info("Anda telah berhasil logout.");
     };
 
-    // ... (useEffect untuk memuat ulang data saat mounting, opsional) ...
-
     return (
         <AuthContext.Provider value={{ 
             isLoggedIn, 
             token, 
             permissions, 
             user, 
-            sidebarMenu, // 👈 TAMBAHKAN INI
+            sidebarMenu, 
             login, 
             logout 
         }}>

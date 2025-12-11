@@ -1,144 +1,132 @@
-/*
- * -- src/styles/sidebar.css --
- * Styling untuk Sidebar.jsx dan menu item di dalamnya.
- */
+/* frontend/src/styles/components/sidebar.css */
 
-/* 1. CONTAINER SIDEBAR UTAMA */
 .sidebar {
-    /* Tetap Fixed agar menu selalu bisa diakses */
-    position: fixed;
-    
-    /* Mulai tepat di bawah Header */
-    top: var(--header-height); 
-    left: 0;
-    
-    /* Tinggi sidebar adalah sisa layar */
-    height: calc(100vh - var(--header-height));
-    width: var(--sidebar-width-desktop);
-    
-    background-color: var(--bg-card);
-    box-shadow: var(--shadow-soft);
-    
-    /* Z-Index di bawah Header (1000) tapi di atas konten */
-    z-index: 900; 
-    
-    overflow-y: auto; /* Agar menu bisa discroll jika itemnya banyak */
-    padding: 10px 0;
-    transition: transform var(--transition-speed), width var(--transition-speed);
+  width: 250px;
+  background: #ffffff;
+  
+  /* --- PERUBAHAN UTAMA DI SINI --- */
+  position: fixed;
+  top: 48px; /* Turunkan sidebar sebesar tinggi Header (sesuaikan px nya) */
+  left: 0;
+  height: calc(100vh - 70px); /* Tinggi layar dikurangi tinggi header */
+  /* ------------------------------- */
+
+  border-right: 1px solid #e5e7eb;
+  transition: transform 0.3s ease-in-out;
+  overflow-y: auto;
+  z-index: 900; /* Z-index lebih kecil dari Header (biasanya header 1000) */
+  padding-bottom: 20px;
 }
 
-/* Responsive: Sembunyi di kiri layar saat mobile */
-@media (max-width: 992px) { 
-    .sidebar {
-        transform: translateX(-100%);
-        /* Saat muncul di mobile, sidebar full height menutupi header juga bisa, 
-           tapi settingan ini membuatnya tetap di bawah header */
-        z-index: 1001; /* Di mobile, sidebar harus di atas konten overlay */
-    }
-    
-    .sidebar.is-open {
-        transform: translateX(0); 
-    }
+.sidebar-content {
+  padding: 20px 0;
 }
 
-
-/* 3. STYLING MENU UTAMA (ul) */
 .main-menu {
-    list-style: none;
-    padding: 0;
-    margin: 0;
+  list-style: none;
+  padding: 0;
+  margin: 0;
 }
 
-.main-menu a, .submenu a {
-    display: flex;
-    align-items: center;
-    padding: 10px 20px;
-    color: var(--text-dark);
-    font-size: 14px;
-    font-weight: 500;
-    
-    /* 🎯 KRITIS: HILANGKAN UNDERLINE DI SINI */
-    text-decoration: none; 
-    
-    transition: all var(--transition-speed);
-}
-
-/* 4. STYLING ITEM MENU (li dan a/Link) */
+/* --- WRAPPER ITEM --- */
 .menu-item-wrapper {
-    margin-bottom: 2px;
+  position: relative;
+  margin-bottom: 2px;
 }
 
-.menu-item-wrapper > a, .menu-item-wrapper button {
-    display: flex;
-    align-items: center;
-    padding: 10px 15px;
-    width: 100%;
-    text-align: left;
-    background: none;
-    border: none;
-    cursor: pointer;
-    font-size: var(--font-size-sm);
-    color: var(--text-dark); /* Warna teks default */
-    transition: background-color var(--transition-speed), color var(--transition-speed);
+/* --- LINK STYLE (YANG DIPERBAIKI) --- */
+.menu-item-link {
+  display: flex;
+  align-items: center;
+  /* HAPUS justify-content: space-between; AGAR TIDAK MENTOK KANAN KIRI */
+  justify-content: flex-start; 
+  padding: 10px 20px;
+  color: #4b5563;
+  text-decoration: none;
+  font-size: 0.95rem;
+  font-weight: 500;
+  transition: all 0.2s;
+  cursor: pointer;
 }
 
-.menu-item-wrapper > a:hover, .menu-item-wrapper button:hover {
-    background-color: color-mix(in srgb, var(--primary-color) 10%, transparent); /* Background hover yang sangat soft */
-    color: var(--primary-color);
+.menu-item-link:hover {
+  background-color: #f3f4f6;
+  color: #111827;
 }
 
-/* 5. ACTIVE STATE */
-.menu-item-wrapper.active > a {
-    /* Background dan warna untuk item yang sedang aktif */
-    background-color: var(--primary-color);
-    color: var(--text-on-primary); /* Putih */
-    border-radius: 0 50px 50px 0; /* Border radius hanya di sisi kanan */
-}
-
-/* 6. IKON DAN TITLE */
+/* --- ICON & JARAK TEKS --- */
 .menu-icon {
-    margin-right: 12px;
-    min-width: 20px; /* Jaga agar ikon tidak bergeser */
+  margin-right: 12px; /* Jarak antara Icon dan Teks */
+  display: flex;
+  align-items: center;
+  min-width: 20px; /* Menjaga lebar icon stabil */
+  justify-content: center;
 }
 
 .menu-title {
-    flex-grow: 1;
+  /* Pastikan teks rapat ke kiri (defaultnya sudah begitu) */
+  flex-grow: 0; 
 }
 
-/* 7. SUBMENU TOGGLER (untuk ikon panah) */
-.menu-toggler {
-    transition: transform var(--transition-speed);
-}
-.menu-toggler.rotated {
-    transform: rotate(90deg);
+/* --- PANAH / ARROW (AGAR TETAP DI KANAN) --- */
+.menu-arrow {
+  margin-left: auto; /* INI KUNCINYA: Mendorong panah mentok ke kanan */
+  display: flex;
+  align-items: center;
+  color: #9ca3af;
 }
 
-/* 8. SUBMENU (ul di dalam li) */
+.menu-arrow svg {
+  transition: transform 0.2s;
+}
+
+/* --- UTILITY D-FLEX --- */
+.d-flex {
+    display: flex;
+    align-items: center;
+}
+
+/* --- STATE: ACTIVE (Untuk Child/Single Menu) --- */
+.menu-item-wrapper.active > .menu-item-link {
+  background-color: #e0f2fe;
+  color: #0284c7;
+  border-right: 3px solid #0284c7;
+}
+
+/* --- STATE: PARENT ACTIVE (Untuk Folder Pembungkus) --- */
+.menu-item-wrapper.parent-active > .menu-item-link {
+  color: #0284c7;
+  font-weight: 600;
+  background-color: transparent;
+}
+
+/* --- SUBMENU LOGIC --- */
 .submenu {
-    list-style: none;
-    padding: 0;
-    margin: 0;
-    padding-left: 20px; /* Indentasi untuk submenu */
-    overflow: hidden; /* Penting untuk animasi buka/tutup */
-    transition: max-height var(--transition-speed) ease-in-out;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  background-color: #f9fafb;
+  
+  /* DEFAULT: HIDDEN */
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.3s ease-out; 
 }
 
-.submenu-item {
-    margin-bottom: 2px;
+/* KETIKA DIBUKA */
+.submenu.show {
+  max-height: 500px;
+  border-top: 1px solid #f3f4f6;
+  border-bottom: 1px solid #f3f4f6;
 }
 
-.submenu-item a {
-    padding: 8px 15px 8px 30px; /* Lebih dalam */
-    font-size: 13px;
-    color: var(--text-muted);
-}
-.submenu-item a:hover {
-    color: var(--primary-color);
+/* SUBMENU LINK STYLE */
+.submenu .menu-item-link {
+  padding-left: 52px; /* Indentasi submenu */
+  font-size: 0.9rem;
 }
 
-/* Active State untuk Submenu Item */
-.submenu-item.active a {
-    font-weight: 600;
-    color: var(--primary-color);
-    /* Tidak perlu background penuh, cukup warna teks yang menonjol */
+/* Panah Rotasi */
+.menu-item-wrapper.open > .menu-item-link .menu-arrow svg {
+  transform: rotate(180deg); /* Putar 180 derajat saat dibuka */
 }

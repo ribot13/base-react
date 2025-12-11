@@ -5,52 +5,54 @@ const { MenuItem } = require('../models');
  * Perubahan: Kita TIDAK memfilter berdasarkan show_in_menu di sini.
  * Semua data dikirim agar Breadcrumb bisa mendeteksi halaman 'Edit/Tambah'.
  */
+// Helper: Membuat struktur pohon (Tree)
 const buildMenuHierarchy = (flatData, parentId = null) => {
     const tree = [];
     const items = flatData
         .filter(item => item.parent_id === parentId)
-        .sort((a, b) => a.order_index - b.order_index);
+        .sort((a, b) => a.order_index - b.order_index); // 👈 PENTING: Sorting di sini
 
     items.forEach(item => {
+        // Ambil properti yang relevan (jika menggunakan raw: true)
+        const itemData = { ...item }; 
+
         const children = buildMenuHierarchy(flatData, item.id);
         
-        // Selalu sertakan children jika ada
         if (children.length) {
-            item.Children = children;
+            itemData.Children = children;
         }
         
-        // Masukkan ke tree (baik itu folder, link, atau hidden item)
-        tree.push(item);
+        tree.push(itemData);
     });
     return tree;
 };
 
+// GET - Sidebar Menu (Public/User)
 exports.getSidebarMenu = async (req, res) => {
     try {
-        // Ambil SEMUA item yang aktif (termasuk yang show_in_menu = 0)
-        const menuItems = await MenuItem.findAll({
-            where: { is_active: true }, 
-            order: [['order_index', 'ASC'], ['id', 'ASC']], 
-            // Pastikan mengambil kolom 'show_in_menu'
-            attributes: [
-                'id', 'title', 'path', 'required_permission', 
-                'icon_name', 'parent_id', 'show_in_menu' 
-            ]
+        // 1. Ambil data mentah (Flat)
+        const rawItems = await MenuItem.findAll({
+            where: { is_active: true }, // Hanya yang aktif
+            order: [['order_index', 'ASC']],
+            raw: true, // Ambil sebagai plain JSON object
+            nest: true
         });
 
-        // Konversi ke Hierarki
-        const hierarchicalMenu = buildMenuHierarchy(
-            menuItems.map(item => item.get({ plain: true }))
-        );
+        // 2. Konversi ke Hierarchy (Tree)
+        const menuTree = buildMenuHierarchy(rawItems);
 
-        return res.status(200).json(hierarchicalMenu);
+        // 3. Kirim dengan format { menu: [], version: '...' }
+        // Ini agar cocok dengan 'setSidebarMenu(data.menu)' di frontend
+        return res.status(200).json({
+            menu: menuTree,
+            version: 'v1.0.1' // Anda bisa simpan versi ini di DB settings jika mau dinamis
+        });
 
     } catch (error) {
-        console.error("Error fetching menu:", error);
-        return res.status(500).json({ message: "Gagal mengambil data menu." });
+        console.error("Sidebar Error:", error);
+        return res.status(500).json({ message: error.message });
     }
 };
-
 
 // --------------------------------------------------------------------
 // B. ENDPOINT CRUD MENU (UNTUK HALAMAN ADMINISTRASI)
@@ -59,11 +61,19 @@ exports.getSidebarMenu = async (req, res) => {
 // GET - Mengambil semua item menu (daftar datar untuk CRUD)
 exports.findAll = async (req, res) => {
     try {
-        const menuItems = await MenuItem.findAll({
-            order: [['order_index', 'ASC']],
+        const rawItems = await MenuItem.findAll({
+            // Tidak perlu filter is_active=true, karena ini halaman admin
+            order: [['order_index', 'ASC'], ['id', 'ASC']], // Sorting dasar
+            raw: true, 
+            nest: true
         });
-        return res.status(200).json(menuItems);
+
+        const menuTree = buildMenuHierarchy(rawItems);
+        
+        // 3. Kirim data Tree
+        return res.status(200).json(menuTree);
     } catch (error) {
+        console.error("Error in menuController.findAll:", error);
         return res.status(500).json({ message: error.message });
     }
 };

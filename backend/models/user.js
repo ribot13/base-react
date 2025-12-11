@@ -1,4 +1,11 @@
-// models/user.js
+// backend/models/user.js
+const ROLE_LEVELS = {
+    'user': 1,
+    'staff': 2,
+    'admin': 3,
+    'superadmin': 99
+};
+
 module.exports = (sequelize, DataTypes) => {
     const User = sequelize.define('User', {
         id: {
@@ -25,17 +32,45 @@ module.exports = (sequelize, DataTypes) => {
             type: DataTypes.STRING(255)
         },
         is_active: {
-            type: DataTypes.TINYINT(1)
+            type: DataTypes.TINYINT(1),
+            defaultValue: 1
         },
-        
+        // --- FIELD BARU UNTUK OPTIMASI ROLE ---
+        role: {
+            type: DataTypes.ENUM('superadmin', 'admin', 'staff', 'user'),
+            allowNull: false,
+            defaultValue: 'user'
+        },
+        role_level: {
+            type: DataTypes.INTEGER,
+            allowNull: false,
+            defaultValue: 1,
+            comment: "1=User, 2=Staff, 3=Admin, 99=Superadmin"
+        }
     }, {
         tableName: 'users',
-        timestamps: true, // Sesuaikan ini dengan kolom created_at/updated_at Anda
-        underscored: true // Opsional: jika kolom DB Anda menggunakan snake_case (misal: full_name)
+        timestamps: true,
+        underscored: true,
+        hooks: {
+            // Hook otomatis: Set role_level berdasarkan role string sebelum save
+            beforeSave: (user) => {
+                if (user.role) {
+                    user.role_level = ROLE_LEVELS[user.role] || 1;
+                }
+            }
+        }
     });
 
     User.associate = (models) => {
-        User.belongsToMany(models.Role, { through: 'user_roles', foreignKey: 'user_id', otherKey: 'role_id' });
+        // Relasi lama (UserRoles) kita hapus/komentari karena kita pakai single role
+        // User.belongsToMany(models.Role, { through: 'user_roles', ... });
+        
+        // Relasi ke JSON Permission Cache
+        User.hasOne(models.UserPermission, { 
+            foreignKey: 'user_id', 
+            as: 'Permissions',
+            onDelete: 'CASCADE' 
+        });
     };
 
     return User;

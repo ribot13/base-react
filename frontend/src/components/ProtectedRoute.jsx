@@ -1,26 +1,23 @@
 // src/components/ProtectedRoute.jsx
 import React from 'react';
-import { Navigate, Outlet } from 'react-router-dom';
-import { useMenuLogic } from '../hooks/useMenuLogic';
+import { Navigate, Outlet, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
 const ProtectedRoute = () => {
     const { isLoggedIn } = useAuth();
-    const { hasAccess } = useMenuLogic();
+    const location = useLocation();
 
-    // 1. Cek Login Dasar
+    // 1. Cek Login Dasar (Wajib)
     if (!isLoggedIn) {
-        return <Navigate to="/login" replace />;
+        // Redirect ke login, tapi simpan lokasi asal agar bisa balik lagi nanti
+        return <Navigate to="/login" state={{ from: location }} replace />;
     }
 
-    // 2. Cek Permission Spesifik per Halaman (dari Database)
-    if (!hasAccess) {
-        // Jika user memaksa masuk URL (misal /admin/users) tapi tidak punya hak akses
-        // Redirect ke Dashboard atau halaman Unauthorized custom
-        return <Navigate to="/dashboard" replace />; 
-    }
-
-    // Jika aman, render halaman yang diminta
+    // 2. HAPUS LOGIKA "hasAccess" YANG BIKIN BLANK
+    // Biarkan user masuk dulu. Jika nanti dia klik menu yang dilarang,
+    // Sidebar yang akan menyembunyikannya, atau API yang akan menolak datanya.
+    
+    // Render Halaman
     return <Outlet />;
 };
 

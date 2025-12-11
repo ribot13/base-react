@@ -1,20 +1,29 @@
-// models/userPermission.js
+// backend/models/userPermission.js
 module.exports = (sequelize, DataTypes) => {
     const UserPermission = sequelize.define('UserPermission', {
-        type: {
-            type: DataTypes.ENUM('allow', 'deny'),
+        user_id: {
+            type: DataTypes.INTEGER,
+            primaryKey: true, // 1 User = 1 Row Permission
+            allowNull: false
+        },
+        // Menyimpan array permission dalam JSON
+        // Contoh: ["product.view", "product.create", "report.view"]
+        permissions: {
+            type: DataTypes.JSON, 
             allowNull: false,
-            defaultValue: 'allow'
+            defaultValue: []
+        },
+        last_updated: {
+            type: DataTypes.DATE,
+            defaultValue: DataTypes.NOW
         }
     }, {
-        tableName: 'user_permission',
-        timestamps: false,
-        primaryKey: ['user_id', 'permission_id'] // Compound Primary Key
+        tableName: 'user_permissions',
+        timestamps: false
     });
 
     UserPermission.associate = (models) => {
-        UserPermission.belongsTo(models.User, { foreignKey: 'user_id' });
-        UserPermission.belongsTo(models.Permission, { foreignKey: 'permission_id' });
+        UserPermission.belongsTo(models.User, { foreignKey: 'user_id', as: 'User' });
     };
 
     return UserPermission;

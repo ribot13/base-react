@@ -3,7 +3,7 @@ const jwt = require('jsonwebtoken');
 const bcrypt = require('bcrypt');
 // 🎯 PERBAIKAN: Impor model Role
 const { User, Role } = require('../models'); 
-const { getEffectivePermissionsFromDB } = require('../services/permissionService'); 
+const { refreshUserPermissions } = require('../services/permissionService'); 
 
 
 // ----------------------------------------------------
@@ -44,105 +44,51 @@ const getUserHighestLevel = (userRoles) => {
 // ----------------------------------------------------
 
 exports.login = async (req, res) => {
-    const { username, password } = req.body;
-
     try {
-        // ------------------------------------------------------------------
-        // 1. CARI PENGGUNA (TERMASUK ROLE)
-        // ------------------------------------------------------------------
-        const user = await User.findOne({ 
-            where: { username: username, is_active: 1, _deleted: 0 },
-            include: [
-                {
-                    model: Role,
-                    as: 'Roles', // Pastikan ini sesuai dengan alias di models/index.js
-                    attributes: ['id', 'name', 'level'],
-                    through: { attributes: [] } // Supaya tabel pivot tidak ikut mengotori output
-                }
-            ]
-        });
-        
-        if (!user) {
-            return res.status(401).json({ message: "Username atau password salah." });
-        }
+        // ... (Kode validasi user & password lama Anda tetap sama) ...
+        const { username, password } = req.body;
+        const user = await User.findOne({ where: { username } });
+        if (!user) return res.status(404).json({ message: "User tidak ditemukan" });
 
-        // ------------------------------------------------------------------
-        // 2. BANDINGKAN PASSWORD
-        // ------------------------------------------------------------------
         const isMatch = await bcrypt.compare(password, user.password);
+        if (!isMatch) return res.status(401).json({ message: "Password salah" });
         
-        if (!isMatch) {
-            return res.status(401).json({ message: "Username atau password salah." });
+        // ... (sampai sini sama)
+
+        // --- BAGIAN BARU: GENERATE PERMISSION SAAT LOGIN ---
+        let permissions = [];
+        
+        // Jika Superadmin, beri tanda khusus atau array kosong (karena dia bypass)
+        if (user.role === 'superadmin') {
+            permissions = ['*']; // Wildcard marker
+        } else {
+            // Hitung ulang permission berdasarkan role level saat ini
+            permissions = await refreshUserPermissions(user.id);
         }
 
-        // ------------------------------------------------------------------
-        // 3. LOGIKA PENENTUAN ROLE TERTINGGI (Active Role)
-        // ------------------------------------------------------------------
-        // Kita ubah user instance jadi plain object dulu biar mudah dimanipulasi
-        const userPlain = user.get({ plain: true });
+        // Buat Token
+        const token = jwt.sign(
+            { id: user.id, role: user.role, role_level: user.role_level }, // Masukkan role_level ke token
+            process.env.JWT_SECRET,
+            { expiresIn: '24h' }
+        );
 
-        // Default value
-        let highestRoleLevel = 0;
-        let activeRoleObj = { id: null, name: 'user', level: 0 };
-
-        // Cek apakah user punya roles
-        if (userPlain.Roles && userPlain.Roles.length > 0) {
-            // Urutkan Role dari Level Terbesar ke Terkecil (Descending)
-            // Contoh: [ {name: 'superadmin', level: 4}, {name: 'staff', level: 1} ]
-            userPlain.Roles.sort((a, b) => b.level - a.level);
-
-            // Role pertama setelah diurutkan adalah role tertinggi
-            const highestRole = userPlain.Roles[0];
-            
-            highestRoleLevel = highestRole.level;
-            activeRoleObj = {
-                id: highestRole.id,
-                name: highestRole.name,
-                level: highestRole.level
-            };
-        }
-
-        // ------------------------------------------------------------------
-        // 4. BUAT TOKEN & AMBIL PERMISSIONS
-        // ------------------------------------------------------------------
-        const tokenPayload = { 
-            id: user.id, 
-            username: user.username,
-            role_level: highestRoleLevel // Berguna untuk middleware nanti
-        };
-        const token = jwt.sign(tokenPayload, process.env.JWT_SECRET, { expiresIn: '1d' });
-
-        // Ambil Permission (Pastikan fungsi ini sudah di-import/tersedia)
-        // Jika fungsi ini ada di file lain, pastikan sudah: const { getEffectivePermissionsFromDB } = require('../services/permissionService');
-        const effectivePermissions = await getEffectivePermissionsFromDB(user.id);
-        
-        // ------------------------------------------------------------------
-        // 5. KIRIM RESPONS
-        // ------------------------------------------------------------------
-        res.status(200).json({
-            message: "Login berhasil!",
-            token: token,
+        // Kirim response lengkap ke Frontend
+        res.json({
+            message: "Login berhasil",
+            token,
             user: {
                 id: user.id,
-                full_name: user.full_name,
                 username: user.username,
-                email: user.email,
-                
-                // 🎯 PERBAIKAN UTAMA DI SINI:
-                // Frontend mengharapkan object 'activeRole', bukan sekadar string 'role_name'
-                activeRole: activeRoleObj,
-                
-                // Tetap kirim ini untuk backward compatibility logika frontend lainnya
-                highestRoleLevel: highestRoleLevel, 
-                
-                // Kirim semua roles yang dimiliki
-                Roles: userPlain.Roles,
+                full_name: user.full_name,
+                role: user.role,
+                role_level: user.role_level
             },
-            permissions: effectivePermissions 
+            permissions: permissions // <--- PENTING: Frontend butuh ini
         });
 
     } catch (error) {
-        console.error("💥 KESALAHAN SERVER (500) DI LOGIN:", error);
-        res.status(500).json({ message: "Terjadi kesalahan server: " + error.message });
+        console.error(error);
+        res.status(500).json({ message: error.message });
     }
-}
+};

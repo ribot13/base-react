@@ -5,12 +5,10 @@ import { useNavigate } from "react-router-dom";
 import { FiEdit, FiTrash2, FiPlus, FiLoader, FiRefreshCw } from "react-icons/fi";
 import { toast } from "react-toastify";
 import { useAuth } from "../../context/AuthContext";
-import { useAccessControl } from "../../hooks/useAccessControl";
 import { fetchUsers, fetchRoles, deleteUser } from "../../services/userService";
 
 const UserAdminPage = () => {
   const { token, user } = useAuth();
-  const { canAccess } = useAccessControl();
   const navigate = useNavigate();
 
   // 1. STATE MANAGEMENT
@@ -22,7 +20,7 @@ const UserAdminPage = () => {
   const loggedInUserId = user?.id;
 
   const REQUIRED_PERMISSION = "manage-users";
-  const canManageUsers = canAccess(REQUIRED_PERMISSION);
+  const canManageUsers = false;//perbaiki ini
 
   // 2. DATA FETCHING
   const loadData = useCallback(async () => {

@@ -1,56 +1,53 @@
-// middlewares/permission.middleware.js
-const { getEffectivePermissionsFromDB } = require('../services/permissionService'); // Sesuaikan path
+// backend/middlewares/permission.middleware.js
+const { UserPermission } = require('../models');
 
 /**
- * Middleware 1: Mengambil daftar izin efektif pengguna dan menyimpannya di req.user.permissions.
- * Harus dijalankan setelah verifyToken.
- */
-exports.fetchPermissions = async (req, res, next) => {
-    // Pastikan ID pengguna tersedia dari verifyToken
-    if (!req.user || !req.user.id) {
-        return res.status(401).json({ message: "Otentikasi diperlukan." });
-    }
-    
-    // Lewati jika izin sudah ada di cache request
-    if (req.user.permissions) {
-        return next();
-    }
-    
-    try {
-        const effectivePermissions = await getEffectivePermissionsFromDB(req.user.id); 
-
-        // Simpan izin di objek user request
-        req.user.permissions = effectivePermissions;
-        next();
-        
-    } catch (error) {
-        console.error("Kesalahan saat memuat hak akses:", error);
-        return res.status(500).json({ message: "Gagal memuat hak akses dari database." });
-    }
-};
-
-
-/**
- * Middleware 2: Memeriksa apakah pengguna memiliki izin tertentu.
- * Harus dijalankan setelah fetchPermissions.
- * @param {string} requiredPermission - Nama izin yang dibutuhkan (misalnya 'create-pinjaman')
+ * Middleware untuk mengecek apakah user memiliki permission tertentu.
+ * Menggunakan strategi JSON Cache untuk performa.
  */
 exports.hasPermission = (requiredPermission) => {
-    return (req, res, next) => {
-        // Pastikan izin sudah dimuat
-        if (!req.user || !req.user.permissions) {
-            return res.status(403).json({ message: "Izin pengguna belum dimuat atau tidak tersedia." });
-        }
+    return async (req, res, next) => {
+        try {
+            const user = req.user; // Dari verifyToken
 
-        // Cek apakah izin yang dibutuhkan ada dalam daftar izin efektif
-        const hasAccess = req.user.permissions.includes(requiredPermission);
+            // 1. BYPASS SUPERADMIN
+            // Superadmin (Level 99) boleh akses segalanya tanpa cek permission
+            if (user.role === 'superadmin' || user.role_level === 99) {
+                return next();
+            }
 
-        if (hasAccess) {
-            next();
-        } else {
+            // 2. Ambil Permission User dari Tabel Cache (JSON)
+            const userPermRecord = await UserPermission.findByPk(user.id);
+            
+            if (!userPermRecord || !userPermRecord.permissions) {
+                return res.status(403).json({ 
+                    message: "Akses Ditolak. Anda tidak memiliki izin apapun." 
+                });
+            }
+
+            const myPermissions = userPermRecord.permissions; // Array string
+
+            // 3. Cek apakah permission yang diminta ada di array user
+            if (myPermissions.includes(requiredPermission)) {
+                return next();
+            }
+
+            // Gagal
             return res.status(403).json({ 
-                message: `Akses ditolak. Anda tidak memiliki hak akses: ${requiredPermission}.` 
+                message: `Akses Ditolak. Membutuhkan izin: ${requiredPermission}` 
             });
+
+        } catch (error) {
+            console.error("Permission Error:", error);
+            return res.status(500).json({ message: "Internal Server Error saat cek permission" });
         }
     };
+};
+
+/**
+ * Middleware dummy jika Anda butuh mengambil permission tapi tidak memblokir
+ * (Opsional, tergantung kebutuhan)
+ */
+exports.fetchPermissions = async (req, res, next) => {
+    next(); 
 };
