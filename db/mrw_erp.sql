@@ -11,7 +11,7 @@
  Target Server Version : 80044 (8.0.44)
  File Encoding         : 65001
 
- Date: 10/12/2025 09:06:51
+ Date: 11/12/2025 11:58:39
 */
 
 SET NAMES utf8mb4;
@@ -57,7 +57,7 @@ CREATE TABLE `menu_items`  (
   UNIQUE INDEX `path_unique`(`path` ASC) USING BTREE,
   INDEX `parent_id`(`parent_id` ASC) USING BTREE,
   CONSTRAINT `menu_items_ibfk_1` FOREIGN KEY (`parent_id`) REFERENCES `menu_items` (`id`) ON DELETE SET NULL ON UPDATE CASCADE
-) ENGINE = InnoDB AUTO_INCREMENT = 31 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB AUTO_INCREMENT = 32 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Records of menu_items
@@ -73,10 +73,24 @@ INSERT INTO `menu_items` VALUES (10, 'Administrasi User', '/admin/users', 'manag
 INSERT INTO `menu_items` VALUES (11, 'Riwayat Pesanan', '/orders/history', 'read-history', 'FiDatabase', 1, 13, 1, 1, '2025-12-02 12:17:29', '2025-12-03 09:20:14');
 INSERT INTO `menu_items` VALUES (12, 'Riwayat Posting', '/orders/posting-history', 'read-posting-history', 'FiArchive', 1, 13, 1, 1, '2025-12-02 12:20:23', '2025-12-03 09:20:14');
 INSERT INTO `menu_items` VALUES (13, 'Laporan Pesanan', '/reports/all', 'read-report', 'FiCircle', 2, 22, 1, 1, '2025-12-02 13:48:12', '2025-12-03 09:20:14');
-INSERT INTO `menu_items` VALUES (24, 'Produk', NULL, NULL, 'FiBox', NULL, 5, 1, 1, '2025-12-03 01:01:38', '2025-12-03 14:49:59');
-INSERT INTO `menu_items` VALUES (25, 'List Produk', '/admin/products', NULL, 'FiGift', 24, 1, 1, 1, '2025-12-03 01:04:13', '2025-12-08 09:01:16');
+INSERT INTO `menu_items` VALUES (24, 'Produk', NULL, NULL, 'FiTag', NULL, 5, 1, 1, '2025-12-03 01:01:38', '2025-12-10 07:37:50');
+INSERT INTO `menu_items` VALUES (25, 'List Produk', '/admin/products', NULL, 'FiBox', 24, 1, 1, 1, '2025-12-03 01:04:13', '2025-12-10 07:37:40');
 INSERT INTO `menu_items` VALUES (29, 'Kategori', '/admin/products/category', NULL, 'FiGrid', 24, 2, 1, 1, '2025-12-03 14:49:56', '2025-12-08 08:11:04');
 INSERT INTO `menu_items` VALUES (30, 'Katalog', '/admin/products/catalogs', NULL, 'FiLayers', 24, 3, 1, 1, '2025-12-09 00:21:01', '2025-12-09 00:21:01');
+INSERT INTO `menu_items` VALUES (31, 'Manajemen Stok', '/admin/products/stock-management', NULL, 'FiRepeat', 24, 4, 1, 1, '2025-12-10 07:12:22', '2025-12-10 07:37:10');
+
+-- ----------------------------
+-- Table structure for models
+-- ----------------------------
+DROP TABLE IF EXISTS `models`;
+CREATE TABLE `models`  (
+  `id` int NOT NULL AUTO_INCREMENT,
+  PRIMARY KEY (`id`) USING BTREE
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci ROW_FORMAT = Dynamic;
+
+-- ----------------------------
+-- Records of models
+-- ----------------------------
 
 -- ----------------------------
 -- Table structure for permissions
@@ -216,6 +230,37 @@ INSERT INTO `product_images` VALUES (2, 6, '/uploads/products/1765190593659-5557
 INSERT INTO `product_images` VALUES (3, 7, '/uploads/products/1765201521606-308446878.webp', 1, 0);
 
 -- ----------------------------
+-- Table structure for product_stock_movements
+-- ----------------------------
+DROP TABLE IF EXISTS `product_stock_movements`;
+CREATE TABLE `product_stock_movements`  (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `product_id` int NOT NULL,
+  `variant_id` int NULL DEFAULT NULL,
+  `type` enum('in','out','adjustment') CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL,
+  `qty_change` int NOT NULL,
+  `balance_after` int NOT NULL,
+  `reference_type` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL,
+  `reference_id` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL,
+  `description` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL,
+  `created_by` int NULL DEFAULT NULL,
+  `createdAt` datetime NOT NULL,
+  PRIMARY KEY (`id`) USING BTREE,
+  INDEX `product_id`(`product_id` ASC) USING BTREE,
+  INDEX `variant_id`(`variant_id` ASC) USING BTREE,
+  INDEX `created_by`(`created_by` ASC) USING BTREE,
+  CONSTRAINT `product_stock_movements_ibfk_1` FOREIGN KEY (`product_id`) REFERENCES `products` (`id`) ON DELETE RESTRICT ON UPDATE CASCADE,
+  CONSTRAINT `product_stock_movements_ibfk_2` FOREIGN KEY (`variant_id`) REFERENCES `product_variants` (`id`) ON DELETE SET NULL ON UPDATE CASCADE,
+  CONSTRAINT `product_stock_movements_ibfk_3` FOREIGN KEY (`created_by`) REFERENCES `users` (`id`) ON DELETE SET NULL ON UPDATE CASCADE
+) ENGINE = InnoDB AUTO_INCREMENT = 3 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci ROW_FORMAT = Dynamic;
+
+-- ----------------------------
+-- Records of product_stock_movements
+-- ----------------------------
+INSERT INTO `product_stock_movements` VALUES (1, 7, NULL, 'adjustment', 3, 8, 'OPNAME', NULL, 'test', NULL, '2025-12-10 06:27:16');
+INSERT INTO `product_stock_movements` VALUES (2, 7, NULL, 'adjustment', -5, 3, 'INLINE_EDIT', NULL, 'Update dari halaman Stok Management', 1, '2025-12-10 07:32:21');
+
+-- ----------------------------
 -- Table structure for product_stocks
 -- ----------------------------
 DROP TABLE IF EXISTS `product_stocks`;
@@ -229,15 +274,14 @@ CREATE TABLE `product_stocks`  (
   PRIMARY KEY (`id`) USING BTREE,
   INDEX `product_id`(`product_id` ASC) USING BTREE,
   CONSTRAINT `product_stocks_ibfk_1` FOREIGN KEY (`product_id`) REFERENCES `products` (`id`) ON DELETE CASCADE ON UPDATE RESTRICT
-) ENGINE = InnoDB AUTO_INCREMENT = 11 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB AUTO_INCREMENT = 12 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of product_stocks
 -- ----------------------------
-INSERT INTO `product_stocks` VALUES (2, 2, 'PK0001', 10, 5, 0);
 INSERT INTO `product_stocks` VALUES (6, 6, 'TS001', 5, 2, 0);
-INSERT INTO `product_stocks` VALUES (7, 7, 'NR001', 5, 5, 0);
-INSERT INTO `product_stocks` VALUES (10, 10, 'PR000', 0, 0, 0);
+INSERT INTO `product_stocks` VALUES (7, 7, 'NR001', 3, 5, 0);
+INSERT INTO `product_stocks` VALUES (11, 11, 'PRS', 0, 0, 0);
 
 -- ----------------------------
 -- Table structure for product_variants
@@ -256,11 +300,23 @@ CREATE TABLE `product_variants`  (
   UNIQUE INDEX `unique_sku`(`sku` ASC) USING BTREE,
   INDEX `product_id`(`product_id` ASC) USING BTREE,
   CONSTRAINT `fk_pv_product` FOREIGN KEY (`product_id`) REFERENCES `products` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
-) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB AUTO_INCREMENT = 17 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of product_variants
 -- ----------------------------
+INSERT INTO `product_variants` VALUES (5, 11, 'PRS-MATEES-S', 129000.00, 1, '{\"Size\": \"S\", \"Motif\": \"Matees\"}', '2025-12-10 05:24:50', '2025-12-10 05:24:50');
+INSERT INTO `product_variants` VALUES (6, 11, 'PRS-MATEES-M', 129000.00, 2, '{\"Size\": \"M\", \"Motif\": \"Matees\"}', '2025-12-10 05:24:50', '2025-12-10 05:24:50');
+INSERT INTO `product_variants` VALUES (7, 11, 'PRS-MATEES-L', 129000.00, 3, '{\"Size\": \"L\", \"Motif\": \"Matees\"}', '2025-12-10 05:24:50', '2025-12-10 05:24:50');
+INSERT INTO `product_variants` VALUES (8, 11, 'PRS-KUJIRA-S', 129000.00, 4, '{\"Size\": \"S\", \"Motif\": \"Kujira\"}', '2025-12-10 05:24:50', '2025-12-10 05:24:50');
+INSERT INTO `product_variants` VALUES (9, 11, 'PRS-KUJIRA-M', 129000.00, 5, '{\"Size\": \"M\", \"Motif\": \"Kujira\"}', '2025-12-10 05:24:50', '2025-12-10 05:24:50');
+INSERT INTO `product_variants` VALUES (10, 11, 'PRS-KUJIRA-L', 129000.00, 6, '{\"Size\": \"L\", \"Motif\": \"Kujira\"}', '2025-12-10 05:24:50', '2025-12-10 05:24:50');
+INSERT INTO `product_variants` VALUES (11, 11, 'PRS-CUPSY-S', 129000.00, 7, '{\"Size\": \"S\", \"Motif\": \"Cupsy\"}', '2025-12-10 05:24:50', '2025-12-10 05:24:50');
+INSERT INTO `product_variants` VALUES (12, 11, 'PRS-CUPSY-M', 129000.00, 6, '{\"Size\": \"M\", \"Motif\": \"Cupsy\"}', '2025-12-10 05:24:50', '2025-12-10 05:24:50');
+INSERT INTO `product_variants` VALUES (13, 11, 'PRS-CUPSY-L', 129000.00, 5, '{\"Size\": \"L\", \"Motif\": \"Cupsy\"}', '2025-12-10 05:24:50', '2025-12-10 05:24:50');
+INSERT INTO `product_variants` VALUES (14, 11, 'PRS-KALA-S', 129000.00, 4, '{\"Size\": \"S\", \"Motif\": \"Kala\"}', '2025-12-10 05:24:50', '2025-12-10 05:24:50');
+INSERT INTO `product_variants` VALUES (15, 11, 'PRS-KALA-M', 129000.00, 3, '{\"Size\": \"M\", \"Motif\": \"Kala\"}', '2025-12-10 05:24:50', '2025-12-10 05:24:50');
+INSERT INTO `product_variants` VALUES (16, 11, 'PRS-KALA-L', 129000.00, 2, '{\"Size\": \"L\", \"Motif\": \"Kala\"}', '2025-12-10 05:24:50', '2025-12-10 05:24:50');
 
 -- ----------------------------
 -- Table structure for product_variation_groups
@@ -273,11 +329,13 @@ CREATE TABLE `product_variation_groups`  (
   PRIMARY KEY (`id`) USING BTREE,
   INDEX `product_id`(`product_id` ASC) USING BTREE,
   CONSTRAINT `fk_pvg_product` FOREIGN KEY (`product_id`) REFERENCES `products` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
-) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB AUTO_INCREMENT = 4 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of product_variation_groups
 -- ----------------------------
+INSERT INTO `product_variation_groups` VALUES (2, 11, 'Motif');
+INSERT INTO `product_variation_groups` VALUES (3, 11, 'Size');
 
 -- ----------------------------
 -- Table structure for product_variation_options
@@ -292,11 +350,18 @@ CREATE TABLE `product_variation_options`  (
   PRIMARY KEY (`id`) USING BTREE,
   INDEX `group_id`(`group_id` ASC) USING BTREE,
   CONSTRAINT `fk_pvo_group` FOREIGN KEY (`group_id`) REFERENCES `product_variation_groups` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
-) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB AUTO_INCREMENT = 12 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of product_variation_options
 -- ----------------------------
+INSERT INTO `product_variation_options` VALUES (5, 2, 'Matees', 'color', '#9e9e9e');
+INSERT INTO `product_variation_options` VALUES (6, 2, 'Kujira', 'color', '#9e9e9e');
+INSERT INTO `product_variation_options` VALUES (7, 2, 'Cupsy', 'color', '#58372c');
+INSERT INTO `product_variation_options` VALUES (8, 2, 'Kala', 'color', '#0d0d0d');
+INSERT INTO `product_variation_options` VALUES (9, 3, 'S', 'text', '#000000');
+INSERT INTO `product_variation_options` VALUES (10, 3, 'M', 'text', '#000000');
+INSERT INTO `product_variation_options` VALUES (11, 3, 'L', 'text', '#000000');
 
 -- ----------------------------
 -- Table structure for product_wholesale_prices
@@ -315,8 +380,6 @@ CREATE TABLE `product_wholesale_prices`  (
 -- ----------------------------
 -- Records of product_wholesale_prices
 -- ----------------------------
-INSERT INTO `product_wholesale_prices` VALUES (2, 2, 3, 119000.00);
-INSERT INTO `product_wholesale_prices` VALUES (3, 2, 6, 114500.00);
 
 -- ----------------------------
 -- Table structure for products
@@ -349,15 +412,14 @@ CREATE TABLE `products`  (
   PRIMARY KEY (`id`) USING BTREE,
   INDEX `category_id`(`category_id` ASC) USING BTREE,
   CONSTRAINT `products_ibfk_1` FOREIGN KEY (`category_id`) REFERENCES `product_category` (`id`) ON DELETE SET NULL ON UPDATE RESTRICT
-) ENGINE = InnoDB AUTO_INCREMENT = 11 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB AUTO_INCREMENT = 12 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of products
 -- ----------------------------
-INSERT INTO `products` VALUES (2, 3, 'Kala', 'kala', 'Tas Selempang mini untuk daily driver. Bisa naro hp', 'public', 78000.00, 125000.00, 149000.00, 0, 0, 'none', 'fixed', 0.00, 350, 24, 4, 12, 1, 'Kala', 'Tas Selempang mini untuk daily driver', '2025-12-08 10:11:02', '2025-12-08 10:20:47');
 INSERT INTO `products` VALUES (6, 7, 'Almas', 'almas', 'Tas selempang mini bisa shoulder juga', 'public', 69000.00, 135000.00, 159000.00, 0, 0, 'none', 'fixed', 0.00, 250, 30, 5, 12, 1, 'Almas', 'Tas selempang mini bisa shoulder juga', '2025-12-08 10:46:02', '2025-12-08 10:46:02');
 INSERT INTO `products` VALUES (7, 11, 'Agery', 'agery', 'Tas selempang yang bagus', 'public', 78500.00, 149000.00, 179000.00, 0, 0, 'none', 'fixed', 0.00, 350, 24, 6, 28, 1, 'Agery', 'Tas selempang yang bagus', '2025-12-08 13:46:00', '2025-12-09 07:37:54');
-INSERT INTO `products` VALUES (10, 1, 'Poke Reborn Series', 'poke-reborn-series', 'tas selempang aja', 'public', 69000.00, 135000.00, 149000.00, 0, 0, 'none', 'fixed', 0.00, 300, 24, 4, 13, 1, 'Poke Reborn Series', 'tas selempang aja', '2025-12-09 10:39:53', '2025-12-09 10:39:53');
+INSERT INTO `products` VALUES (11, 1, 'Poke Reborn Series', 'poke-reborn-series', 'tas selempang aja', 'public', 69000.00, 129000.00, 159000.00, 0, 0, 'none', 'fixed', 0.00, 280, 21, 4, 12, 1, '', '', '2025-12-10 05:22:45', '2025-12-10 07:39:28');
 
 -- ----------------------------
 -- Table structure for role_permissions
