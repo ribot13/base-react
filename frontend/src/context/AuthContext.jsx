@@ -59,7 +59,7 @@ export const AuthProvider = ({ children }) => {
             });
 
             if (response.status === 304) {
-                console.log("Menu up-to-date (Cached)");
+                //console.log("Menu up-to-date (Cached)");
                 return; 
             }
 
@@ -79,7 +79,7 @@ export const AuthProvider = ({ children }) => {
                     finalMenu = []; // Fallback agar tidak crash
                 }
 
-                console.log("Menu berhasil dimuat:", finalMenu); // Debugging
+                //console.log("Menu berhasil dimuat:", finalMenu); // Debugging
 
                 setSidebarMenu(finalMenu); 
                 localStorage.setItem('sidebarMenu', JSON.stringify(finalMenu));

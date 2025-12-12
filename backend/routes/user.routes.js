@@ -5,9 +5,6 @@ const userController = require('../controllers/user.controller');
 const { verifyToken } = require('../middlewares/auth'); 
 const { fetchPermissions, hasPermission } = require('../middlewares/permission.middleware'); 
 
-// Permission untuk admin
-const permission = 'manage-users';
-
 // ==================================================================
 // 1. ROUTE PROFILE (WAJIB DI PALING ATAS!)
 // ==================================================================
@@ -23,22 +20,22 @@ router.post('/profile/change-password', verifyToken, userController.changePasswo
 // ==================================================================
 
 // GET - Ambil semua User
-router.get('/', [verifyToken, fetchPermissions, hasPermission(permission)], userController.findAll);
+router.get('/', verifyToken,  userController.findAll);
 
 // POST - Buat User Baru
-router.post('/', [verifyToken, fetchPermissions, hasPermission(permission)], userController.create);
+router.post('/', verifyToken,  userController.create);
 
 // ------------------------------------------------------------------
 // ROUTE DINAMIS (/:id) HARUS DI PALING BAWAH
 // ------------------------------------------------------------------
 
 // GET - Ambil user by ID
-router.get('/:id', [verifyToken, fetchPermissions, hasPermission(permission)], userController.findOne);
+router.get('/:id', verifyToken,  userController.findOne);
 
 // PUT - Update User by ID
-router.put('/:id', [verifyToken, fetchPermissions, hasPermission(permission)], userController.update);
+router.put('/:id', verifyToken,  userController.update);
 
 // DELETE - Hapus User by ID
-router.delete('/:id', [verifyToken, fetchPermissions, hasPermission(permission)], userController.delete);
+router.delete('/:id', verifyToken,  userController.delete);
 
 module.exports = router;

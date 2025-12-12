@@ -73,7 +73,7 @@ const DashboardPage = () => {
                 <li style={{ marginBottom: '8px' }}>
                     <strong>Active Role:</strong>{' '}
                     <span className="badge badge-neutral" style={{ backgroundColor: 'var(--primary-color)', color: '#fff' }}>
-                        {user.activeRole?.name || 'No Role'} (Level : {user.activeRole?.level || '0'} )
+                        {user.role || 'No Role'} (Level : {user.role_level || '0'} )
                     </span>
                 </li>
               </ul>

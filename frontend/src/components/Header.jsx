@@ -75,7 +75,7 @@ const Header = ({ onSidebarToggle, isSidebarOpen }) => {
             <div className="user-info-text">
               <span className="user-name">{user?.full_name || "Pengguna"}</span>
               <small className="user-role">
-                {user?.activeRole?.name || "Role"}
+                {user.role || "No One"}
               </small>
             </div>
             <FiChevronDown
