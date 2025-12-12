@@ -6,10 +6,12 @@ import { FiEdit, FiTrash2, FiPlus, FiLoader, FiRefreshCw } from "react-icons/fi"
 import { toast } from "react-toastify";
 import { useAuth } from "../../context/AuthContext";
 import { fetchUsers, fetchRoles, deleteUser } from "../../services/userService";
+import { usePermission } from "../../hooks/usePermission";
 
 const UserAdminPage = () => {
   const { token, user } = useAuth();
   const navigate = useNavigate();
+  const {can}=usePermission();
 
   // 1. STATE MANAGEMENT
   const [users, setUsers] = useState([]);
@@ -19,8 +21,7 @@ const UserAdminPage = () => {
   const loggedInUserLevel = user?.highestRoleLevel || 0;
   const loggedInUserId = user?.id;
 
-  const REQUIRED_PERMISSION = "manage-users";
-  const canManageUsers = false;//perbaiki ini
+  const canManageUsers = can('user.view')
 
   // 2. DATA FETCHING
   const loadData = useCallback(async () => {

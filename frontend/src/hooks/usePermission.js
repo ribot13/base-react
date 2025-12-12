@@ -2,43 +2,54 @@
 import { useAuth } from "../context/AuthContext";
 
 export const usePermission = () => {
-  // 1. Ambil data dengan safety check (antisipasi jika Context belum siap)
   const authContext = useAuth();
   
-  // Jika context null (jarang terjadi tapi mungkin), berikan default
+  // Safety check: cegah crash jika context belum siap
   const user = authContext?.user || null;
   const permissions = authContext?.permissions || [];
 
   /**
    * Cek apakah user punya izin tertentu
+   * @param {string} requiredPermission - Nama permission yang dibutuhkan (misal: 'user.view')
    */
   const can = (requiredPermission) => {
-    // Safety 1: Jika user belum login/data user kosong, tolak.
+    // 1. Jika tidak login, tolak
     if (!user) return false;
 
-    // Safety 2: Superadmin Bypass (Level 99 atau role string)
-    // Pastikan role di-lowercase agar tidak case-sensitive
-    const role = user.role ? user.role.toLowerCase() : '';
-    if (role === 'superadmin' || user.role_level === 99) {
+    // 2. SUPERADMIN BYPASS (Berdasarkan Role)
+    // Jika role user adalah superadmin, selalu izinkan
+    if (user.role === 'superadmin' || user.role_level === 99) {
         return true; 
     }
 
-    // Safety 3: Pastikan permissions adalah ARRAY sebelum di-includes
+    // 3. WILDCARD BYPASS (Berdasarkan Permission '*')
+    // Jika user punya permission '*', anggap dia dewa (boleh semua)
+    if (Array.isArray(permissions) && permissions.includes('*')) {
+        return true;
+    }
+
+    // 4. Validasi Array Normal
     if (!Array.isArray(permissions)) {
-        console.warn("Permission data is corrupted/not an array:", permissions);
         return false;
     }
 
-    // Cek permission
+    // 5. Cek Spesifik
+    // Apakah permission yang diminta ada di daftar permission user?
     return permissions.includes(requiredPermission);
   };
 
+  /**
+   * Cek apakah user punya SALAH SATU dari permission yang diminta
+   * @param {Array} permissionList - Contoh: ['user.create', 'user.edit']
+   */
   const canAny = (permissionList) => {
     if (!user) return false;
-    const role = user.role ? user.role.toLowerCase() : '';
-    if (role === 'superadmin' || user.role_level === 99) return true;
+    if (user.role === 'superadmin' || user.role_level === 99) return true;
+    if (Array.isArray(permissions) && permissions.includes('*')) return true; // 👈 Handle Wildcard di sini juga
     
     if (!Array.isArray(permissions)) return false;
+    
+    // Cek apakah ada irisan data
     return permissionList.some(p => permissions.includes(p));
   };
 
