@@ -21,7 +21,11 @@ const UserAdminPage = () => {
   const loggedInUserLevel = user?.highestRoleLevel || 0;
   const loggedInUserId = user?.id;
 
-  const canManageUsers = can('user.view')
+  //permission
+  const canView = can('user.view')
+  const canCreate = can('user.create')
+  const canEdit = can('user.edit')
+  const canDelete = can('user.delete')
 
   // 2. DATA FETCHING
   const loadData = useCallback(async () => {
@@ -42,14 +46,14 @@ const UserAdminPage = () => {
   }, [token]);
 
   useEffect(() => {
-    if (canManageUsers && token) {
+    if (canView && token) {
       loadData();
-    } else if (!canManageUsers && !loading) {
+    } else if (!canView && !loading) {
       toast.error("Anda tidak memiliki izin untuk mengakses halaman ini.");
     } else {
       setLoading(false);
     }
-  }, [loadData, canManageUsers, token]);
+  }, [loadData, canView, token]);
 
   // 3. TITLE BROWSER OTOMATIS
   useEffect(() => {
@@ -86,7 +90,7 @@ const UserAdminPage = () => {
     return false;
   };
 
-  if (!canManageUsers && !loading) {
+  if (!canView && !loading) {
     return (
       <div className="container-fluid p-0">
          <div className="card-panel text-center py-5">
@@ -107,7 +111,7 @@ const UserAdminPage = () => {
             <button
             className="btn btn-primary btn-sm"
             onClick={handleAdd}
-            disabled={!canManageUsers}
+            disabled={!canCreate}
             >
             <FiPlus className="me-2" /> Tambah Pengguna
             </button>
@@ -194,7 +198,7 @@ const UserAdminPage = () => {
                                         className="btn-icon-sm"
                                         style={{ background: 'white', border: '1px solid #d1d5db', padding: '6px', borderRadius: '4px', cursor: 'pointer', color: '#4b5563' }}
                                         onClick={() => handleEdit(u)}
-                                        disabled={!canManageUsers}
+                                        disabled={!canEdit}
                                         title="Edit Pengguna"
                                     >
                                     <FiEdit size={16} />
@@ -212,7 +216,7 @@ const UserAdminPage = () => {
                                             opacity: isDeleteDisabled(u) ? 0.6 : 1
                                         }}
                                         onClick={() => handleDelete(u)}
-                                        disabled={isDeleteDisabled(u) || !canManageUsers}
+                                        disabled={isDeleteDisabled(u) || !canDelete}
                                         title={isDeleteDisabled(u) ? "Akses Dibatasi" : "Hapus Pengguna"}
                                     >
                                     <FiTrash2 size={16} />

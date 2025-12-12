@@ -19,13 +19,16 @@ router.post('/profile/change-password', verifyToken, userController.changePasswo
 // 💡 PERBAIKAN: Gunakan permission standar 'user.view'
 // Pastikan di database menu_items, kolom required_permission untuk menu "Kelola User" juga 'user.view'
 const viewPermission = 'user.view'; 
-const managePermission = 'user.create'; // Atau sesuaikan dengan kebutuhan (misal user.manage)
+const managePermission = 'user.manage'; // Atau sesuaikan dengan kebutuhan (misal user.manage)
+const editPermission = 'user.edit'; // Atau sesuaikan dengan kebutuhan (misal user.manage)
+const deletePermission = 'user.delete'; // Atau sesuaikan dengan kebutuhan (misal user.manage)
+const createPermission = 'user.haha'; // Atau sesuaikan dengan kebutuhan (misal user.manage)
 
 // GET - Ambil semua User (Gunakan viewPermission)
 router.get('/', [verifyToken, fetchPermissions, hasPermission(viewPermission)], userController.findAll);
 
 // POST - Buat User Baru (Gunakan createPermission atau managePermission)
-router.post('/', [verifyToken, fetchPermissions, hasPermission(managePermission)], userController.create);
+router.post('/', [verifyToken, fetchPermissions, hasPermission(createPermission)], userController.create);
 
 // ------------------------------------------------------------------
 // ROUTE DINAMIS (/:id)
@@ -35,9 +38,9 @@ router.post('/', [verifyToken, fetchPermissions, hasPermission(managePermission)
 router.get('/:id', [verifyToken, fetchPermissions, hasPermission(viewPermission)], userController.findOne);
 
 // PUT - Update User by ID
-router.put('/:id', [verifyToken, fetchPermissions, hasPermission(managePermission)], userController.update);
+router.put('/:id', [verifyToken, fetchPermissions, hasPermission(createPermission)], userController.update);
 
 // DELETE - Hapus User by ID
-router.delete('/:id', [verifyToken, fetchPermissions, hasPermission(managePermission)], userController.delete);
+router.delete('/:id', [verifyToken, fetchPermissions, hasPermission(deletePermission)], userController.delete);
 
 module.exports = router;
